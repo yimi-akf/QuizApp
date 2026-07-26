@@ -1,0 +1,10 @@
+{
+  "name": "entry",
+  "version": "1.0.0",
+  "description": "趣味问答应用主入口模块，提供答题、错题本、成就、统计等核心功能",
+  "main": "",
+  "author": "gaorun",
+  "license": "Apache-2.0",
+  "dependencies": {}
+}
+

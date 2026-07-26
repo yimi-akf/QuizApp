@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "趣味问答 - 知识、推理、脑筋急转弯题库"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "趣味问答应用，提供知识型问答、脑筋急转弯、推理型问答三类题目"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "趣味问答"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "modelVersion": "6.1.0",
+  "description": "趣味问答 - 纯血鸿蒙单机答题应用，含错题本、成就系统、统计看板、主题换肤等功能",
+  "dependencies": {
+  },
+  "devDependencies": {}
+}

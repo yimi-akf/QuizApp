@@ -1,0 +1,35 @@
+# Build outputs
+build/
+entry/build/
+*.hap
+*.app
+*.har
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Dependencies
+node_modules/
+oh_modules/
+
+# Local config
+local.properties
+local.properties.bak
+
+# Hvigor
+.hvigor/
+.hvigorw.bat.cache/
+
+# Signing (do not commit private keys)
+*.p12
+*.cer
+*.p7b
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

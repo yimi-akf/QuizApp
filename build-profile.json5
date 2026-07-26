@@ -1,0 +1,96 @@
+{
+  "app": {
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "C:\\Users\\11236\\.ohos\\config\\default_QuizApp_v9y2o6KPb18fxKtDtJcuc92ECcfnWzTgiJUHO_MjzQY=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001BAD73604B44740D46EA63CEB9611152DD3613E6A8B83D27CE0EDEF94B4287C0C0B3A6428BF7D5CF",
+          "profile": "C:\\Users\\11236\\.ohos\\config\\default_QuizApp_v9y2o6KPb18fxKtDtJcuc92ECcfnWzTgiJUHO_MjzQY=.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "C:\\Users\\11236\\.ohos\\config\\default_QuizApp_v9y2o6KPb18fxKtDtJcuc92ECcfnWzTgiJUHO_MjzQY=.p12",
+          "storePassword": "0000001BEE87C721255E9C561E7681E51098CCC04A9C637BD9684A00C6A153D4CF751A20BA72007434AE11"
+        }
+      },
+      {
+        "name": "release",
+        "type": "HarmonyOS",
+        "material": {
+          "storeFile": "C:/Users/11236/Desktop/wode/GR.p12",
+          "storePassword": "0000001980F6165C3A497C455A1C29B726567F9F8B0E53F3BDD56F9D7D7117E3ACFA325048419156CB",
+          "keyAlias": "QuizAppKey",
+          "keyPassword": "00000019141BD21A0A050C1F7015F3E8D298B6FDF00A6CFE6C3453BE1FAB5764933BA5E9DF855F24B1",
+          "signAlg": "SHA256withECDSA",
+          "profile": "C:/Users/11236/Desktop/wode/QuizApp_ReleaseRelease.p7b",
+          "certpath": "C:/Users/11236/Desktop/wode/QuizApp.cer"
+        }
+      },
+      {
+        "name": "debug",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "C:\\Users\\11236\\.ohos\\config\\debug_QuizApp_v9y2o6KPb18fxKtDtJcuc92ECcfnWzTgiJUHO_MjzQY=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001AEBBF98DBD2457F8D95C36649BCBBE14820211867B5446730ADF24C6149A4EDF4E8D3AA800270",
+          "profile": "C:\\Users\\11236\\.ohos\\config\\debug_QuizApp_v9y2o6KPb18fxKtDtJcuc92ECcfnWzTgiJUHO_MjzQY=.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "C:\\Users\\11236\\.ohos\\config\\debug_QuizApp_v9y2o6KPb18fxKtDtJcuc92ECcfnWzTgiJUHO_MjzQY=.p12",
+          "storePassword": "0000001A21080DD0D195BBE88038C59655171DFA6F986140FC520DD86F97135D5E075CD6E9AE2154FE7C"
+        }
+      }
+    ],
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        "targetSdkVersion": "6.1.0(23)",
+        "compatibleSdkVersion": "6.1.0(23)",
+        "runtimeOS": "HarmonyOS",
+        "buildOption": {
+          "strictMode": {
+            "caseSensitiveCheck": true,
+            "useNormalizedOHMUrl": true
+          }
+        }
+      },
+      {
+        "name": "release",
+        "signingConfig": "release",
+        "targetSdkVersion": "6.1.0(23)",
+        "compatibleSdkVersion": "6.1.0(23)",
+        "runtimeOS": "HarmonyOS",
+        "buildOption": {
+          "strictMode": {
+            "caseSensitiveCheck": true,
+            "useNormalizedOHMUrl": true
+          }
+        }
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug",
+      },
+      {
+        "name": "release"
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default",
+            "release"
+          ]
+        }
+      ]
+    }
+  ]
+}

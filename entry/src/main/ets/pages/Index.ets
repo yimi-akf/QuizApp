@@ -121,21 +121,21 @@ struct Index {
     }
     .width(260)
     .height(56)
-    .backgroundColor('rgba(255,255,255,0.72)')
+    .backgroundColor('rgba(255,255,255,0.42)')
     .borderRadius(28)
-    .backdropBlur(20)
+    .backdropBlur(28)
     .shadow({
-      radius: 16,
-      color: 'rgba(0,0,0,0.12)',
+      radius: 20,
+      color: 'rgba(0,0,0,0.10)',
       offsetX: 0,
-      offsetY: 4
+      offsetY: 6
     })
     .margin({ bottom: 16 })
   }
 
   build() {
-    Stack({ alignContent: Alignment.Bottom }) {
-      Navigation(this.pageStack) {
+    Navigation(this.pageStack) {
+      Stack({ alignContent: Alignment.Bottom }) {
         Tabs({ barPosition: BarPosition.End, controller: this.tabsController }) {
           TabContent() {
             HomeTab()
@@ -168,15 +168,15 @@ struct Index {
         .onChange((index: number) => {
           this.currentTabIndex = index;
         })
+
+        this.FloatingTabBar()
       }
-      .navDestination(this.pageMap)
-      .hideTitleBar(true)
-      .hideBackButton(true)
       .width('100%')
       .height('100%')
-
-      this.FloatingTabBar()
     }
+    .navDestination(this.pageMap)
+    .hideTitleBar(true)
+    .hideBackButton(true)
     .width('100%')
     .height('100%')
   }

@@ -72,7 +72,7 @@ export struct DifficultySelectPage {
 
         Text('根据自己的水平选择合适的挑战')
           .fontSize(15)
-          .fontColor('rgba(255,255,255,0.85)')
+          .fontColor(this.theme.textOnPrimaryMuted)
       }
       .width('100%')
       .height(220)
@@ -212,7 +212,7 @@ export struct DifficultySelectPage {
 
       Text(desc)
         .fontSize(11)
-        .fontColor(this.selectedMode === mode ? 'rgba(255,255,255,0.9)' : this.theme.textSecondary)
+        .fontColor(this.selectedMode === mode ? this.theme.textOnPrimaryMuted : this.theme.textSecondary)
         .margin({ top: 2 })
     }
     .width(96)

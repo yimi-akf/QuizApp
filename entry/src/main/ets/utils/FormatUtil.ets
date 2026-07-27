@@ -30,16 +30,6 @@ export function difficultyLabel(difficulty: Difficulty | 'mixed'): string {
   }
 }
 
-export function difficultyColor(difficulty: Difficulty | 'mixed'): string {
-  switch (difficulty) {
-    case Difficulty.ENTRY: return '#4CAF50';
-    case Difficulty.ADVANCED: return '#FF9800';
-    case Difficulty.CHALLENGE: return '#F44336';
-    case 'mixed': return '#9C27B0';
-    default: return '#757575';
-  }
-}
-
 export function typeLabel(type: QuestionType): string {
   switch (type) {
     case QuestionType.SINGLE_CHOICE: return '单选题';

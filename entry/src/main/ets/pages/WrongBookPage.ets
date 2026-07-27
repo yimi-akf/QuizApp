@@ -115,7 +115,7 @@ export struct WrongBookPage {
 
               Text('待练习')
                 .fontSize(13)
-                .fontColor('rgba(255,255,255,0.85)')
+                .fontColor(this.theme.textOnPrimaryMuted)
             }
             .alignItems(HorizontalAlign.Center)
             .layoutWeight(1)
@@ -128,7 +128,7 @@ export struct WrongBookPage {
 
               Text('总收录')
                 .fontSize(13)
-                .fontColor('rgba(255,255,255,0.85)')
+                .fontColor(this.theme.textOnPrimaryMuted)
             }
             .alignItems(HorizontalAlign.Center)
             .layoutWeight(1)

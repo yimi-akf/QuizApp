@@ -81,7 +81,7 @@ export struct AchievementPage {
 
             Text('累计答题')
               .fontSize(16)
-              .fontColor('rgba(255,255,255,0.9)')
+              .fontColor(this.theme.textOnPrimaryMuted)
           }
           .width('100%')
           .padding({ top: 16, bottom: 20 })

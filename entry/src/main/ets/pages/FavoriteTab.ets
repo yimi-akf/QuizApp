@@ -6,7 +6,7 @@ import { AppTheme, THEMES } from '../model/AppTheme';
 import { Question } from '../model/Question';
 import { QuizPageParams } from './QuizPage';
 import { EmptyState } from '../components/EmptyState';
-import { topicShortLabel } from '../utils/FormatUtil';
+import { topicShortLabel, difficultyLabel } from '../utils/FormatUtil';
 
 class FavoriteItemData {
   public record: FavoriteRecord;
@@ -116,7 +116,7 @@ export struct FavoriteTab {
           .textOverflow({ overflow: TextOverflow.Ellipsis })
           .width('100%')
 
-        Text(`${topicShortLabel(item.question.topic)} · ${item.question.difficulty}`)
+        Text(`${topicShortLabel(item.question.topic)} · ${difficultyLabel(item.question.difficulty)}`)
           .fontSize(12)
           .fontColor(this.theme.textSecondary)
           .margin({ top: 6 })
@@ -183,7 +183,7 @@ export struct FavoriteTab {
 
           Text(`共 ${this.favorites.length} 道收藏题目`)
             .fontSize(15)
-            .fontColor('rgba(255,255,255,0.85)')
+            .fontColor(this.theme.textOnPrimaryMuted)
         }
         .width('100%')
         .height(220)

@@ -109,12 +109,6 @@ export class WrongBookStorage {
     return records.filter(r => !r.mastered).map(r => r.questionId);
   }
 
-  // 判断题目是否已在错题本中
-  static isWrongQuestion(context: common.UIAbilityContext, questionId: number): boolean {
-    const records = WrongBookStorage.loadRecords(context);
-    return records.some(r => r.questionId === questionId);
-  }
-
   // 清空错题本
   static clearAll(context: common.UIAbilityContext): void {
     const prefs = WrongBookStorage.getPreferences(context);

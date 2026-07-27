@@ -107,7 +107,7 @@ export struct HistoryPage {
 
             Text(`共 ${this.records.length} 条记录`)
               .fontSize(15)
-              .fontColor('rgba(255,255,255,0.85)')
+              .fontColor(this.theme.textOnPrimaryMuted)
           }
           .layoutWeight(1)
           .justifyContent(FlexAlign.Center)
@@ -164,7 +164,7 @@ export struct HistoryPage {
           Scroll() {
             Column({ space: 12 }) {
               ForEach(this.records, (record: HistoryRecord, index: number) => {
-                this.HistoryItem(record, index)
+                this.HistoryItem(record)
               }, (record: HistoryRecord) => record.id.toString())
             }
             .width('100%')
@@ -281,7 +281,7 @@ export struct HistoryPage {
   }
 
   @Builder
-  HistoryItem(record: HistoryRecord, index: number) {
+  HistoryItem(record: HistoryRecord) {
     Row() {
       Column() {
         Row() {

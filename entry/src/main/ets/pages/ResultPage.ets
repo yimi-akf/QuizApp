@@ -283,7 +283,7 @@ export struct ResultPage {
       Column() {
         Text(this.quizMode === QuizMode.CHALLENGE ? '闯关结束' : this.quizMode === QuizMode.TIME_ATTACK ? '挑战结束' : '答题完成')
           .fontSize(18)
-          .fontColor('rgba(255,255,255,0.85)')
+          .fontColor(this.theme.textOnPrimaryMuted)
           .margin({ top: 50, bottom: 8 })
 
         Row() {
@@ -298,7 +298,7 @@ export struct ResultPage {
             })
           Text('分')
             .fontSize(24)
-            .fontColor('rgba(255,255,255,0.85)')
+            .fontColor(this.theme.textOnPrimaryMuted)
             .margin({ left: 4, bottom: 12 })
         }
         .width('100%')
@@ -437,18 +437,11 @@ export struct ResultPage {
               this.navTimerId1 = -1;
               try {
                 this.pageStack.clear();
-              } catch (e) {
-                hilog.error(0x0000, 'ResultPage', 'clear stack failed');
-              }
-            }, 50);
-            this.navTimerId2 = setTimeout(() => {
-              this.navTimerId2 = -1;
-              try {
                 this.pageStack.pushPath({ name: 'TypeSelect' });
               } catch (e) {
-                hilog.error(0x0000, 'ResultPage', 'push TypeSelect failed');
+                hilog.error(0x0000, 'ResultPage', 'clear and push failed: %{public}s', JSON.stringify(e));
               }
-            }, 150);
+            }, 100);
           })
       }
       .width('100%')

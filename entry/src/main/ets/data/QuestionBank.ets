@@ -1,5 +1,4 @@
 import { Question, QuestionType, Difficulty, Topic } from '../model/Question';
-import { shuffleArray } from '../utils/ArrayUtil';
 
 // 题库数据
 // 来源：趣味综合题库大全（升级版）.docx
@@ -5009,29 +5008,3 @@ const allQuestions: Question[] = [
 
 // 导出兼容命名，供其他页面直接引用
 export const questionBank: Question[] = allQuestions;
-
-// 获取全部题目
-export function getAllQuestions(): Question[] {
-  return allQuestions;
-}
-
-// 按主题和难度筛选题目
-export function getQuestionsByTopicAndDifficulty(
-  topic: Topic,
-  difficulty: Difficulty | 'mixed'
-): Question[] {
-  let result = allQuestions;
-  if (topic !== undefined) {
-    result = result.filter(q => q.topic === topic);
-  }
-  if (difficulty !== 'mixed') {
-    result = result.filter(q => q.difficulty === difficulty);
-  }
-  return result;
-}
-
-// 按主题获取混合难度题目（随机乱序）
-export function getMixedQuestionsByTopic(topic: Topic): Question[] {
-  const result = allQuestions.filter(q => q.topic === topic);
-  return shuffleArray(result);
-}

@@ -66,7 +66,7 @@ export struct TypeSelectPage {
 
         Text('挑选你感兴趣的挑战方向')
           .fontSize(15)
-          .fontColor('rgba(255,255,255,0.85)')
+          .fontColor(this.theme.textOnPrimaryMuted)
       }
       .width('100%')
       .height(220)

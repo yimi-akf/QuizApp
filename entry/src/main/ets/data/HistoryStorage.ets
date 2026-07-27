@@ -82,15 +82,6 @@ export class HistoryStorage {
     }
   }
 
-  // 读取最新一条答题记录
-  static loadLatestRecord(context: common.UIAbilityContext): HistoryRecord | null {
-    const records = HistoryStorage.loadRecords(context);
-    if (records.length === 0) {
-      return null;
-    }
-    return records[0];
-  }
-
   // 清空所有答题记录
   static clearRecords(context: common.UIAbilityContext): void {
     const prefs = HistoryStorage.getPreferences(context);

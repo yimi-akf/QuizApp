@@ -147,7 +147,7 @@ export struct HomeTab {
 
           Text(APP_SLOGAN)
             .fontSize(15)
-            .fontColor('rgba(255,255,255,0.85)')
+            .fontColor(this.theme.textOnPrimaryMuted)
         }
         .alignItems(HorizontalAlign.Center)
       }

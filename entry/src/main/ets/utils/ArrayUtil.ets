@@ -11,12 +11,3 @@ export function shuffleArray<T>(array: T[]): T[] {
   }
   return arr;
 }
-
-// 从数组中随机取 n 个元素
-export function randomPick<T>(array: T[], n: number): T[] {
-  if (n >= array.length) {
-    return shuffleArray(array);
-  }
-  const shuffled = shuffleArray(array);
-  return shuffled.slice(0, n);
-}

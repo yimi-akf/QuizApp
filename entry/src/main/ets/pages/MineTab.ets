@@ -147,7 +147,7 @@ export struct MineTab {
       Column()
         .width('100%')
         .height('100%')
-        .backgroundColor('rgba(0,0,0,0.4)')
+        .backgroundColor(this.theme.overlayScrim)
         .onClick(() => { })
 
       Column({ space: 16 }) {
@@ -280,7 +280,7 @@ export struct MineTab {
     .width('100%')
     .height('100%')
     .justifyContent(FlexAlign.Center)
-    .backgroundColor('rgba(0,0,0,0.5)')
+    .backgroundColor(this.theme.overlayScrim)
   }
 
   @Builder
@@ -342,7 +342,7 @@ export struct MineTab {
     .width('100%')
     .height('100%')
     .justifyContent(FlexAlign.Center)
-    .backgroundColor('rgba(0,0,0,0.5)')
+    .backgroundColor(this.theme.overlayScrim)
   }
 
   @Builder
@@ -438,7 +438,7 @@ export struct MineTab {
     .width('100%')
     .height('100%')
     .justifyContent(FlexAlign.Center)
-    .backgroundColor('rgba(0,0,0,0.5)')
+    .backgroundColor(this.theme.overlayScrim)
   }
 
   @Builder

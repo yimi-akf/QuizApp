@@ -18,15 +18,3 @@ export function formatDate(date: Date): string {
 export function todayString(): string {
   return formatDate(new Date());
 }
-
-// 判断两个日期是否为同一天
-export function isSameDay(date1: Date, date2: Date): boolean {
-  return date1.getFullYear() === date2.getFullYear() &&
-    date1.getMonth() === date2.getMonth() &&
-    date1.getDate() === date2.getDate();
-}
-
-// 判断日期字符串是否为今天
-export function isToday(dateStr: string): boolean {
-  return dateStr === todayString();
-}

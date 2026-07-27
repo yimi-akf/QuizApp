@@ -91,21 +91,27 @@ struct Index {
 
   @Builder
   FloatingTabItem(title: string, icon: string, index: number) {
-    Column({ space: 2 }) {
+    Column({ space: 3 }) {
       Text(icon)
         .fontSize(22)
-        .fontColor(this.currentTabIndex === index ? this.theme.primary : '#9E9E9E')
-        .scale({ x: this.currentTabIndex === index ? 1.1 : 1, y: this.currentTabIndex === index ? 1.1 : 1 })
-        .animation({ duration: 200, curve: Curve.EaseOut })
+        .fontColor(this.currentTabIndex === index ? this.theme.primary : this.theme.tabInactive)
+        .scale({ x: this.currentTabIndex === index ? 1.15 : 1, y: this.currentTabIndex === index ? 1.15 : 1 })
+        .animation({ duration: 250, curve: Curve.EaseOut })
 
       Text(title)
         .fontSize(10)
-        .fontColor(this.currentTabIndex === index ? this.theme.primary : '#9E9E9E')
+        .fontColor(this.currentTabIndex === index ? this.theme.primary : this.theme.tabInactive)
         .fontWeight(this.currentTabIndex === index ? FontWeight.Medium : FontWeight.Normal)
+        .opacity(this.currentTabIndex === index ? 1 : 0.7)
+        .animation({ duration: 250, curve: Curve.EaseOut })
     }
     .width(86)
     .height(56)
     .justifyContent(FlexAlign.Center)
+    .stateStyles({
+      pressed: { .scale({ x: 0.88, y: 0.88 }) },
+      normal: { .scale({ x: 1, y: 1 }) }
+    })
     .onClick(() => {
       this.currentTabIndex = index;
       this.tabsController.changeIndex(index);
@@ -121,18 +127,18 @@ struct Index {
     }
     .width(280)
     .height(60)
-    .backgroundColor('rgba(255,255,255,0.55)')
+    .backgroundColor(this.theme.glassBg)
     .borderRadius(30)
-    .backgroundBlurStyle(BlurStyle.COMPONENT_ULTRA_THICK, {
+    .backgroundBlurStyle(BlurStyle.BACKGROUND_ULTRA_THICK, {
       colorMode: ThemeColorMode.LIGHT,
       adaptiveColor: AdaptiveColor.DEFAULT
     })
-    .border({ width: 1, color: 'rgba(255,255,255,0.65)' })
+    .border({ width: 1.5, color: this.theme.glassBorder })
     .shadow({
-      radius: 30,
-      color: 'rgba(0,0,0,0.12)',
+      radius: 40,
+      color: 'rgba(0,0,0,0.15)',
       offsetX: 0,
-      offsetY: 8
+      offsetY: 12
     })
     .margin({ bottom: 18 })
   }

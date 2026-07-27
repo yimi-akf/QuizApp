@@ -101,7 +101,7 @@ export struct StatsPage {
 
           Text('总正确率')
             .fontSize(14)
-            .fontColor('rgba(255,255,255,0.85)')
+            .fontColor(this.theme.textOnPrimaryMuted)
             .margin({ bottom: 16 })
         }
         .width('100%')

@@ -22,6 +22,8 @@ const EMPTY_QUESTION: Question = {
   explanation: '该分类下暂时没有题目，请选择其他类型或难度。'
 };
 
+const TIME_ATTACK_TOTAL_SECONDS = 60;
+
 @Styles
 function optionPressedStyle() {
   .scale({ x: 0.98, y: 0.98 })
@@ -247,11 +249,11 @@ export struct QuizPage {
   startTimeAttackTimer() {
     this.stopTimeAttackTimer();
     this.timeAttackTimerId = setInterval(() => {
+      this.timeAttackRemaining--;
       if (this.timeAttackRemaining <= 0) {
         this.finishTimeAttack();
         return;
       }
-      this.timeAttackRemaining--;
     }, 1000);
   }
 
@@ -280,7 +282,7 @@ export struct QuizPage {
           answers: this.userAnswers,
           questionIds: this.currentQuestions.map(q => q.id),
           selfAssessments: this.selfAssessments,
-          elapsedSeconds: 60 - this.timeAttackRemaining,
+          elapsedSeconds: TIME_ATTACK_TOTAL_SECONDS - this.timeAttackRemaining,
           mode: this.quizMode
         } as ResultPageParams
       });
@@ -470,6 +472,10 @@ export struct QuizPage {
     // 错题本模式答对：累计连续答对次数
     if (this.quizMode === QuizMode.WRONG_BOOK && isCorrect) {
       WrongBookStorage.addCorrect(context, q.id);
+    }
+    // 错题本模式答错：重置连续答对次数
+    if (this.quizMode === QuizMode.WRONG_BOOK && !isCorrect) {
+      WrongBookStorage.addWrong(context, q.id);
     }
     // 闯关模式答错：立即结束
     if (this.quizMode === QuizMode.CHALLENGE && !isCorrect) {
@@ -844,8 +850,8 @@ export struct QuizPage {
     }
     .width('100%')
     .padding(16)
-    .backgroundColor('#F5F7FA')
-    .border({ width: 1, color: '#E8EAED' })
+    .backgroundColor(this.theme.optionDefaultBg)
+    .border({ width: 1, color: this.theme.divider })
     .borderRadius(12)
     .margin({ top: 12 })
   }
@@ -991,15 +997,15 @@ export struct QuizPage {
 
   OptionBgColor(index: number): string {
     if (!this.hasAnswered) {
-      return '#F5F7FA';
+      return this.theme.optionDefaultBg;
     }
     if (index === this.currentQuestion().correctIndex) {
-      return '#E8F5E9';
+      return this.theme.optionCorrectBg;
     }
     if (index === this.userAnswers[this.currentIndex]) {
-      return '#FFEBEE';
+      return this.theme.optionWrongBg;
     }
-    return '#F5F7FA';
+    return this.theme.optionDefaultBg;
   }
 
   OptionLabelColor(index: number): string {
@@ -1020,10 +1026,10 @@ export struct QuizPage {
       return this.theme.textPrimary;
     }
     if (index === this.currentQuestion().correctIndex) {
-      return '#2E7D32';
+      return this.theme.success;
     }
     if (index === this.userAnswers[this.currentIndex]) {
-      return '#C62828';
+      return this.theme.error;
     }
     return this.theme.textSecondary;
   }
@@ -1033,10 +1039,10 @@ export struct QuizPage {
       return `${this.theme.primary}1A`;
     }
     if (index === this.currentQuestion().correctIndex) {
-      return '#43A047';
+      return this.theme.success;
     }
     if (index === this.userAnswers[this.currentIndex]) {
-      return '#E53935';
+      return this.theme.error;
     }
     return `${this.theme.primary}1A`;
   }

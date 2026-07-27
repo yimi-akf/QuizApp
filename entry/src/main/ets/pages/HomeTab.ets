@@ -264,7 +264,7 @@ export struct HomeTab {
       .width('100%')
       .layoutWeight(1)
       .padding({ left: 20, right: 20, top: 20, bottom: 20 })
-      .backgroundColor('#FFFFFF')
+      .backgroundColor(this.theme.background)
       .opacity(this.contentOpacity)
       .translate({ y: this.contentOffset })
       .animation({
@@ -275,6 +275,6 @@ export struct HomeTab {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#FFFFFF')
+    .backgroundColor(this.theme.background)
   }
 }

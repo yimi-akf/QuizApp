@@ -188,7 +188,7 @@ export struct MineTab {
       }
       .width('80%')
       .padding(24)
-      .backgroundColor('#FFFFFF')
+      .backgroundColor(this.theme.card)
       .borderRadius(20)
     }
     .width('100%')
@@ -326,7 +326,7 @@ export struct MineTab {
       }
       .width('80%')
       .padding(24)
-      .backgroundColor('#FFFFFF')
+      .backgroundColor(this.theme.card)
       .borderRadius(20)
       .shadow({
         radius: 16,
@@ -422,7 +422,7 @@ export struct MineTab {
       .width('85%')
       .height('75%')
       .padding(24)
-      .backgroundColor('#FFFFFF')
+      .backgroundColor(this.theme.card)
       .borderRadius(20)
       .shadow({
         radius: 16,
@@ -561,14 +561,14 @@ export struct MineTab {
         .width('100%')
         .layoutWeight(1)
         .padding({ left: 20, right: 20, top: 20, bottom: 20 })
-        .backgroundColor('#FFFFFF')
+        .backgroundColor(this.theme.background)
         .opacity(this.contentOpacity)
         .translate({ y: this.contentOffset })
         .animation({ duration: 600, curve: Curve.EaseOut, delay: 150 })
       }
       .width('100%')
       .height('100%')
-      .backgroundColor('#FFFFFF')
+      .backgroundColor(this.theme.background)
 
       // 主题选择弹窗
       if (this.showThemeDialog) {

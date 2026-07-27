@@ -11,7 +11,17 @@ import { formatTime } from '../utils/FormatUtil';
 export struct StatsPage {
   @Consume('pageStack') pageStack: NavPathStack
   @State theme: AppTheme = THEMES[0];
-  @State stats: QuizStats = { totalQuizzes: 0, totalQuestions: 0, totalAnswered: 0, totalCorrect: 0, averageScore: 0, bestScore: 0, totalTimeSeconds: 0, topicProgress: [], dailyStats: [] };
+  @State stats: QuizStats = {
+    totalQuizzes: 0,
+    totalQuestions: 0,
+    totalAnswered: 0,
+    totalCorrect: 0,
+    averageScore: 0,
+    bestScore: 0,
+    totalTimeSeconds: 0,
+    topicProgress: [],
+    dailyStats: []
+  };
   @State records: HistoryRecord[] = [];
   @State headerOpacity: number = 0;
   @State headerOffset: number = -30;
@@ -35,9 +45,11 @@ export struct StatsPage {
 
   loadData() {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
-    this.records = HistoryStorage.loadRecords(context);
-    this.stats = StatsStorage.computeStats(this.records);
-    this.stats.topicProgress = StatsStorage.loadTopicProgress(context);
+    const records = HistoryStorage.loadRecords(context);
+    const stats = StatsStorage.computeStats(records);
+    stats.topicProgress = StatsStorage.loadTopicProgress(context);
+    this.records = records;
+    this.stats = stats;
   }
 
   goBack() {
@@ -119,7 +131,7 @@ export struct StatsPage {
               // 关键数据卡片
               Row({ space: 12 }) {
                 this.StatCard('📋', `${this.stats.totalQuizzes}`, '答题次数')
-                this.StatCard('📝', `${this.stats.totalQuestions}`, '总题数')
+                this.StatCard('📝', `${this.stats.totalAnswered}`, '总题数')
                 this.StatCard('⏱️', formatTime(this.stats.totalTimeSeconds), '总用时')
               }
               .width('100%')

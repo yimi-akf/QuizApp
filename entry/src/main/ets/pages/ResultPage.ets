@@ -34,7 +34,12 @@ export interface ResultPageParams {
 @Component
 export struct ResultPage {
   @Consume('pageStack') pageStack: NavPathStack
-  param: ResultPageParams = { topic: Topic.KNOWLEDGE, difficulty: Difficulty.ENTRY, answers: [], questionIds: [] }
+  public param: ResultPageParams = {
+    topic: Topic.KNOWLEDGE,
+    difficulty: Difficulty.ENTRY,
+    answers: [],
+    questionIds: []
+  }
   @State theme: AppTheme = THEMES[0];
   @State userAnswers: number[] = [];
   @State currentQuestions: Question[] = [];
@@ -57,6 +62,9 @@ export struct ResultPage {
   @State listOpacity: number = 0;
   // 分数计数动画定时器
   private scoreAnimTimerId: number = -1;
+  // 页面跳转 setTimeout 句柄，页面销毁时统一清理
+  private navTimerId1: number = -1;
+  private navTimerId2: number = -1;
 
   aboutToAppear() {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
@@ -136,7 +144,10 @@ export struct ResultPage {
     }
 
     // 保存答题历史记录（普通/闯关/限时模式）
-    if (this.quizMode === QuizMode.NORMAL || this.quizMode === QuizMode.CHALLENGE || this.quizMode === QuizMode.TIME_ATTACK) {
+    const isScoringMode = this.quizMode === QuizMode.NORMAL ||
+      this.quizMode === QuizMode.CHALLENGE ||
+      this.quizMode === QuizMode.TIME_ATTACK;
+    if (isScoringMode) {
       this.saveHistoryRecord();
     }
 
@@ -183,6 +194,19 @@ export struct ResultPage {
 
   aboutToDisappear() {
     this.stopScoreAnimation();
+    this.clearNavTimers();
+  }
+
+  // 清理页面跳转定时器，避免回调已销毁组件
+  private clearNavTimers() {
+    if (this.navTimerId1 !== -1) {
+      clearTimeout(this.navTimerId1);
+      this.navTimerId1 = -1;
+    }
+    if (this.navTimerId2 !== -1) {
+      clearTimeout(this.navTimerId2);
+      this.navTimerId2 = -1;
+    }
   }
 
   // 格式化已用时间为 mm:ss
@@ -309,7 +333,10 @@ export struct ResultPage {
         Divider().vertical(true).height(40).color(this.theme.divider)
         this.StatItem(`${this.answeredCount - this.correctCount}`, '答错')
         Divider().vertical(true).height(40).color(this.theme.divider)
-        this.StatItem(`${this.answeredCount}`, this.quizMode === QuizMode.CHALLENGE || this.quizMode === QuizMode.TIME_ATTACK ? '已答' : '总题数')
+        this.StatItem(
+          `${this.answeredCount}`,
+          this.quizMode === QuizMode.CHALLENGE || this.quizMode === QuizMode.TIME_ATTACK ? '已答' : '总题数'
+        )
         Divider().vertical(true).height(40).color(this.theme.divider)
         this.StatItem(this.formatElapsedTime(), '用时')
       }
@@ -383,7 +410,8 @@ export struct ResultPage {
             normal: resultButtonNormalStyle
           })
           .onClick(() => {
-            setTimeout(() => {
+            this.navTimerId1 = setTimeout(() => {
+              this.navTimerId1 = -1;
               try {
                 this.pageStack.clear();
               } catch (e) {
@@ -405,15 +433,21 @@ export struct ResultPage {
             normal: resultButtonNormalStyle
           })
           .onClick(() => {
-            setTimeout(() => {
+            this.navTimerId1 = setTimeout(() => {
+              this.navTimerId1 = -1;
               try {
                 this.pageStack.clear();
               } catch (e) {
                 hilog.error(0x0000, 'ResultPage', 'clear stack failed');
               }
             }, 50);
-            setTimeout(() => {
-              this.pageStack.pushPath({ name: 'TypeSelect' });
+            this.navTimerId2 = setTimeout(() => {
+              this.navTimerId2 = -1;
+              try {
+                this.pageStack.pushPath({ name: 'TypeSelect' });
+              } catch (e) {
+                hilog.error(0x0000, 'ResultPage', 'push TypeSelect failed');
+              }
             }, 150);
           })
       }

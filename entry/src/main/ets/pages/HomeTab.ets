@@ -2,9 +2,9 @@ import common from '@ohos.app.ability.common';
 import { ProgressStorage, LastProgressSummary } from '../data/ProgressStorage';
 import { ThemeManager } from '../data/ThemeManager';
 import { AppTheme, THEMES } from '../model/AppTheme';
-import { Difficulty, Topic } from '../model/Question';
 import { QuizPageParams } from './QuizPage';
 import { APP_NAME, APP_SLOGAN } from '../data/AppConstants';
+import { topicLabel, difficultyLabel } from '../utils/FormatUtil';
 
 // 首页标签内容
 @Component
@@ -62,25 +62,6 @@ export struct HomeTab {
     this.lastHomeModule = module;
   }
 
-  topicLabel(topic: Topic): string {
-    switch (topic) {
-      case Topic.KNOWLEDGE: return '知识型问答';
-      case Topic.RIDDLE: return '脑筋急转弯';
-      case Topic.REASONING: return '推理型问答';
-      default: return '';
-    }
-  }
-
-  difficultyLabel(difficulty: Difficulty | 'mixed'): string {
-    switch (difficulty) {
-      case Difficulty.ENTRY: return '入门';
-      case Difficulty.ADVANCED: return '进阶';
-      case Difficulty.CHALLENGE: return '挑战';
-      case 'mixed': return '混合乱序';
-      default: return '';
-    }
-  }
-
   continueLastProgress() {
     if (!this.lastProgress) {
       return;
@@ -90,7 +71,7 @@ export struct HomeTab {
       param: {
         topic: this.lastProgress.topic,
         difficulty: this.lastProgress.difficulty,
-        continue: true
+        shouldContinue: true
       } as QuizPageParams
     });
   }
@@ -209,7 +190,7 @@ export struct HomeTab {
                   .fontWeight(FontWeight.Bold)
                   .margin({ bottom: 4 })
 
-                Text(`${this.topicLabel(this.lastProgress.topic)} · ${this.difficultyLabel(this.lastProgress.difficulty)} · 第 ${this.lastProgress.currentIndex + 1} / ${this.lastProgress.total} 题`)
+                Text(`${topicLabel(this.lastProgress.topic)} · ${difficultyLabel(this.lastProgress.difficulty)} · 第 ${this.lastProgress.currentIndex + 1} / ${this.lastProgress.total} 题`)
                   .fontSize(15)
                   .fontColor(this.theme.textPrimary)
               }

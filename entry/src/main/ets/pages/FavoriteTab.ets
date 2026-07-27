@@ -3,13 +3,14 @@ import { FavoriteStorage, FavoriteRecord } from '../data/FavoriteStorage';
 import { questionBank } from '../data/QuestionBank';
 import { ThemeManager } from '../data/ThemeManager';
 import { AppTheme, THEMES } from '../model/AppTheme';
-import { Question, Topic } from '../model/Question';
+import { Question } from '../model/Question';
 import { QuizPageParams } from './QuizPage';
 import { EmptyState } from '../components/EmptyState';
+import { topicShortLabel } from '../utils/FormatUtil';
 
 class FavoriteItemData {
-  record: FavoriteRecord;
-  question: Question;
+  public record: FavoriteRecord;
+  public question: Question;
 
   constructor(record: FavoriteRecord, question: Question) {
     this.record = record;
@@ -62,18 +63,14 @@ export struct FavoriteTab {
 
   loadData(context: common.UIAbilityContext) {
     this.favorites = FavoriteStorage.loadRecords(context);
-    this.favoriteItems = this.favorites
-      .map((record: FavoriteRecord) => new FavoriteItemData(record, this.findQuestion(record.questionId)!))
-      .filter((item) => item.question !== undefined);
-  }
-
-  topicLabel(topic: Topic): string {
-    switch (topic) {
-      case Topic.KNOWLEDGE: return '知识';
-      case Topic.RIDDLE: return '脑筋急转弯';
-      case Topic.REASONING: return '推理';
-      default: return '';
-    }
+    const items: FavoriteItemData[] = [];
+    this.favorites.forEach((record: FavoriteRecord) => {
+      const q = this.findQuestion(record.questionId);
+      if (q !== undefined) {
+        items.push(new FavoriteItemData(record, q));
+      }
+    });
+    this.favoriteItems = items;
   }
 
   findQuestion(questionId: number): Question | undefined {
@@ -119,7 +116,7 @@ export struct FavoriteTab {
           .textOverflow({ overflow: TextOverflow.Ellipsis })
           .width('100%')
 
-        Text(`${this.topicLabel(item.question.topic)} · ${item.question.difficulty}`)
+        Text(`${topicShortLabel(item.question.topic)} · ${item.question.difficulty}`)
           .fontSize(12)
           .fontColor(this.theme.textSecondary)
           .margin({ top: 6 })

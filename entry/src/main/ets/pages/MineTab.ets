@@ -17,6 +17,7 @@ export struct MineTab {
   @Consume('pageStack') pageStack: NavPathStack
   @StorageLink('quizThemeIndex') @Watch('onThemeIndexChange') themeIndex: number = 0;
   @State theme: AppTheme = THEMES[0];
+  @State currentThemeName: string = THEMES[0].name;
   @State headerOpacity: number = 0;
   @State contentOpacity: number = 0;
   @State contentOffset: number = 40;
@@ -32,21 +33,25 @@ export struct MineTab {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     ThemeManager.syncToAppStorage(context);
     this.theme = THEMES[this.themeIndex] ?? THEMES[0];
+    this.currentThemeName = this.theme.name;
     this.playEntranceAnimation();
   }
 
   onPageShow() {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     this.theme = THEMES[this.themeIndex] ?? THEMES[0];
+    this.currentThemeName = this.theme.name;
   }
 
   onThemeIndexChange() {
     this.theme = THEMES[this.themeIndex] ?? THEMES[0];
+    this.currentThemeName = this.theme.name;
   }
 
   onMineTabShow() {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     this.theme = THEMES[this.themeIndex] ?? THEMES[0];
+    this.currentThemeName = this.theme.name;
   }
 
   playEntranceAnimation() {
@@ -72,6 +77,7 @@ export struct MineTab {
     ThemeManager.setThemeIndex(context, index);
     this.themeIndex = index;
     this.theme = THEMES[index];
+    this.currentThemeName = THEMES[index].name;
     this.showThemeDialog = false;
   }
 
@@ -87,6 +93,7 @@ export struct MineTab {
     ThemeManager.clearAll(context);
     this.themeIndex = 0;
     this.theme = THEMES[0];
+    this.currentThemeName = THEMES[0].name;
     this.showClearDialog = false;
     this.showClearedDialog = true;
   }
@@ -492,7 +499,7 @@ export struct MineTab {
 
         // 设置项列表
         Column({ space: 12 }) {
-          this.SettingItem('🎨', '主题换肤', `当前：${this.theme.name}`, () => {
+          this.SettingItem('🎨', '主题换肤', `当前：${this.currentThemeName}`, () => {
             this.showThemeDialog = true;
           })
 

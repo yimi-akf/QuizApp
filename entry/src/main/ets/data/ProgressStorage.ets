@@ -99,7 +99,11 @@ export class ProgressStorage {
   }
 
   // 读取某主题+难度的进度
-  static loadProgress(context: common.UIAbilityContext, topic: Topic, difficulty: Difficulty | 'mixed'): ProgressInfo | null {
+  static loadProgress(
+    context: common.UIAbilityContext,
+    topic: Topic,
+    difficulty: Difficulty | 'mixed'
+  ): ProgressInfo | null {
     const map = ProgressStorage.loadProgressMap(context);
     const key = ProgressStorage.progressKey(topic, difficulty);
     return map[key] || null;

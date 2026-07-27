@@ -45,7 +45,7 @@ function quizButtonNormalStyle() {
 export interface QuizPageParams {
   topic: Topic;
   difficulty: Difficulty | 'mixed';
-  continue?: boolean;
+  shouldContinue?: boolean;
   questionIds?: number[];
   mode?: QuizMode;
 }
@@ -55,7 +55,7 @@ export interface QuizPageParams {
 export struct QuizPage {
   @Consume('pageStack') pageStack: NavPathStack
   @State theme: AppTheme = THEMES[0];
-  param: QuizPageParams = { topic: Topic.KNOWLEDGE, difficulty: Difficulty.ENTRY }
+  public param: QuizPageParams = { topic: Topic.KNOWLEDGE, difficulty: Difficulty.ENTRY }
   // 当前轮次题目
   @State currentQuestions: Question[] = [];
   // 当前选择的主题与难度（用于存档 key）
@@ -67,7 +67,7 @@ export struct QuizPage {
   @State timeAttackRemaining: number = 60;
   private timeAttackTimerId: number = -1;
   // 限时/闯关模式是否已结束
-  @State specialModeFinished: boolean = false;
+  @State isSpecialModeFinished: boolean = false;
   // 当前题目索引（从 0 开始）
   @State currentIndex: number = 0;
   // 用户每道题的选择，-1 表示未作答
@@ -104,7 +104,7 @@ export struct QuizPage {
     const params = this.param;
     const topic = params && params.topic ? params.topic : Topic.KNOWLEDGE;
     const difficulty = params && params.difficulty ? params.difficulty : Difficulty.ENTRY;
-    const isContinue = !!(params && params.continue);
+    const isContinue = !!(params && params.shouldContinue);
     const providedIds = params && params.questionIds ? params.questionIds : [];
     const mode = params && params.mode ? params.mode : QuizMode.NORMAL;
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
@@ -247,11 +247,11 @@ export struct QuizPage {
   startTimeAttackTimer() {
     this.stopTimeAttackTimer();
     this.timeAttackTimerId = setInterval(() => {
-      if (this.timeAttackRemaining > 0) {
-        this.timeAttackRemaining--;
-      } else {
+      if (this.timeAttackRemaining <= 0) {
         this.finishTimeAttack();
+        return;
       }
+      this.timeAttackRemaining--;
     }, 1000);
   }
 
@@ -265,10 +265,10 @@ export struct QuizPage {
 
   // 限时模式结束
   finishTimeAttack() {
-    if (this.specialModeFinished) {
+    if (this.isSpecialModeFinished) {
       return;
     }
-    this.specialModeFinished = true;
+    this.isSpecialModeFinished = true;
     this.stopTimeAttackTimer();
     this.stopTimer();
     try {
@@ -292,6 +292,32 @@ export struct QuizPage {
   // 格式化已用时间为 mm:ss
   formatElapsedTime(): string {
     return `已用 ${formatTime(this.elapsedSeconds)}`;
+  }
+
+  // 限时模式倒计时颜色：剩余 10 秒以内使用 error 色提示
+  timeAttackColor(): string {
+    if (this.quizMode === QuizMode.TIME_ATTACK && this.timeAttackRemaining <= 10) {
+      return this.theme.error;
+    }
+    return this.theme.primary;
+  }
+
+  // 当前题目自评结果
+  selfAssessment(): 'pending' | 'correct' | 'wrong' {
+    return this.selfAssessments[this.currentIndex];
+  }
+
+  // 当前题目自评反馈颜色
+  selfAssessmentColor(): string {
+    return this.selfAssessment() === 'correct' ? this.theme.success : this.theme.warning;
+  }
+
+  // 下一题/结束按钮文案
+  nextButtonText(): string {
+    if (this.currentIndex < this.currentQuestions.length - 1) {
+      return '下一题';
+    }
+    return this.quizMode === QuizMode.TIME_ATTACK ? '结束挑战' : '查看结果';
   }
 
   // 页面销毁时停止计时
@@ -463,10 +489,10 @@ export struct QuizPage {
 
   // 闯关模式结束
   finishChallenge() {
-    if (this.specialModeFinished) {
+    if (this.isSpecialModeFinished) {
       return;
     }
-    this.specialModeFinished = true;
+    this.isSpecialModeFinished = true;
     this.stopTimer();
     this.stopTimeAttackTimer();
     try {
@@ -489,7 +515,7 @@ export struct QuizPage {
 
   // 自动进入下一题（用于限时模式）
   private autoNext() {
-    if (this.specialModeFinished) {
+    if (this.isSpecialModeFinished) {
       return;
     }
     if (this.currentQuestions.length === 0) {
@@ -700,9 +726,9 @@ export struct QuizPage {
 
           Text(this.quizMode === QuizMode.TIME_ATTACK ? `剩余 ${this.timeAttackRemaining}s` : this.formatElapsedTime())
             .fontSize(12)
-            .fontColor(this.quizMode === QuizMode.TIME_ATTACK && this.timeAttackRemaining <= 10 ? this.theme.error : this.theme.primary)
+            .fontColor(this.timeAttackColor())
             .fontWeight(FontWeight.Medium)
-            .backgroundColor(`${this.quizMode === QuizMode.TIME_ATTACK && this.timeAttackRemaining <= 10 ? this.theme.error : this.theme.primary}1A`)
+            .backgroundColor(`${this.timeAttackColor()}1A`)
             .padding({ left: 8, right: 8, top: 3, bottom: 3 })
             .borderRadius(8)
         }
@@ -710,7 +736,11 @@ export struct QuizPage {
       .width('100%')
       .justifyContent(FlexAlign.SpaceBetween)
 
-      Progress({ value: this.currentIndex + (this.hasAnswered ? 1 : 0), total: this.currentQuestions.length, type: ProgressType.Linear })
+      Progress({
+        value: this.currentIndex + (this.hasAnswered ? 1 : 0),
+        total: this.currentQuestions.length,
+        type: ProgressType.Linear
+      })
         .width('100%')
         .color(this.theme.primary)
         .backgroundColor(this.theme.divider)
@@ -892,14 +922,14 @@ export struct QuizPage {
           })
         } else {
           Column() {
-            Text(this.selfAssessments[this.currentIndex] === 'correct' ? '恭喜 🎉' : '再接再厉 💪')
+            Text(this.selfAssessment() === 'correct' ? '恭喜 🎉' : '再接再厉 💪')
               .fontSize(22)
               .fontWeight(FontWeight.Bold)
-              .fontColor(this.selfAssessments[this.currentIndex] === 'correct' ? this.theme.success : this.theme.warning)
+              .fontColor(this.selfAssessment() === 'correct' ? this.theme.success : this.theme.warning)
           }
           .width('100%')
           .padding(16)
-          .backgroundColor(this.selfAssessments[this.currentIndex] === 'correct' ? `${this.theme.success}14` : `${this.theme.warning}14`)
+          .backgroundColor(`${this.selfAssessmentColor()}14`)
           .borderRadius(12)
           .margin({ top: 16 })
           .opacity(this.feedbackOpacity)
@@ -1061,7 +1091,7 @@ export struct QuizPage {
         })
         .onClick(() => this.onPrevious())
 
-      Button(this.currentIndex < this.currentQuestions.length - 1 ? '下一题' : (this.quizMode === QuizMode.TIME_ATTACK ? '结束挑战' : '查看结果'))
+      Button(this.nextButtonText())
         .layoutWeight(1)
         .height(52)
         .fontSize(17)

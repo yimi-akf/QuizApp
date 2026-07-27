@@ -1,9 +1,9 @@
 import common from '@ohos.app.ability.common';
 import { HistoryRecord, HistoryStorage } from '../data/HistoryStorage';
-import { Difficulty, Topic } from '../model/Question';
+import { Difficulty } from '../model/Question';
 import { AppTheme, THEMES } from '../model/AppTheme';
 import { ThemeManager } from '../data/ThemeManager';
-import { formatTime as formatTimeUtil } from '../utils/FormatUtil';
+import { topicLabel, difficultyLabel, formatTime } from '../utils/FormatUtil';
 import hilog from '@ohos.hilog';
 
 // 答题历史页：展示历史答题记录列表
@@ -55,25 +55,6 @@ export struct HistoryPage {
     this.showClearDialog = false
   }
 
-  topicLabel(topic: Topic): string {
-    switch (topic) {
-      case Topic.KNOWLEDGE: return '知识型问答';
-      case Topic.RIDDLE: return '脑筋急转弯';
-      case Topic.REASONING: return '推理型问答';
-      default: return '';
-    }
-  }
-
-  difficultyLabel(difficulty: Difficulty | 'mixed'): string {
-    switch (difficulty) {
-      case Difficulty.ENTRY: return '入门';
-      case Difficulty.ADVANCED: return '进阶';
-      case Difficulty.CHALLENGE: return '挑战';
-      case 'mixed': return '混合乱序';
-      default: return '';
-    }
-  }
-
   difficultyColor(difficulty: Difficulty | 'mixed'): string {
     switch (difficulty) {
       case Difficulty.ENTRY: return this.theme.success;
@@ -82,10 +63,6 @@ export struct HistoryPage {
       case 'mixed': return '#9C27B0';
       default: return this.theme.textSecondary;
     }
-  }
-
-  formatTime(seconds: number): string {
-    return formatTimeUtil(seconds);
   }
 
   build() {
@@ -308,13 +285,13 @@ export struct HistoryPage {
     Row() {
       Column() {
         Row() {
-          Text(this.topicLabel(record.topic))
+          Text(topicLabel(record.topic))
             .fontSize(14)
             .fontColor(this.theme.textPrimary)
             .fontWeight(FontWeight.Bold)
             .layoutWeight(1)
 
-          Text(this.difficultyLabel(record.difficulty))
+          Text(difficultyLabel(record.difficulty))
             .fontSize(12)
             .fontColor(this.difficultyColor(record.difficulty))
             .padding({ left: 8, right: 8, top: 2, bottom: 2 })
@@ -331,7 +308,7 @@ export struct HistoryPage {
             .fontWeight(FontWeight.Bold)
             .layoutWeight(1)
 
-          Text(`用时 ${this.formatTime(record.elapsedSeconds)}`)
+          Text(`用时 ${formatTime(record.elapsedSeconds)}`)
             .fontSize(13)
             .fontColor(this.theme.textSecondary)
         }

@@ -90,7 +90,9 @@ export class DataBackupManager {
     try {
       const d = new Date();
       const pad = (n: number) => String(n).padStart(2, '0');
-      const fileName = `quiz_backup_${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.json`;
+      const datePart = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+      const timePart = `${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+      const fileName = `quiz_backup_${datePart}_${timePart}.json`;
       const filePath = DataBackupManager.getBackupDir(context) + '/' + fileName;
 
       const backupData = {
@@ -100,8 +102,11 @@ export class DataBackupManager {
       };
 
       const file = fs.openSync(filePath, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-      fs.writeSync(file.fd, JSON.stringify(backupData));
-      fs.closeSync(file);
+      try {
+        fs.writeSync(file.fd, JSON.stringify(backupData));
+      } finally {
+        fs.closeSync(file);
+      }
 
       DataBackupManager.cleanupOldBackups(context);
       return filePath;
@@ -170,7 +175,13 @@ export class DataBackupManager {
       const buf = new ArrayBuffer(fileSize);
       const readLen = fs.readSync(file.fd, buf);
       if (readLen !== fileSize) {
-        hilog.error(0x0001, 'DataBackupManager', 'readBackup incomplete: read %{public}d of %{public}d', readLen.toString(), fileSize.toString());
+        hilog.error(
+          0x0001,
+          'DataBackupManager',
+          'readBackup incomplete: read %{public}d of %{public}d',
+          readLen.toString(),
+          fileSize.toString()
+        );
         return null;
       }
       // 用 TextDecoder 解码 UTF-8，替代逐字节拼接（性能从 O(n²) 降为 O(n)）
@@ -223,7 +234,12 @@ export class DataBackupManager {
       });
 
       if (skippedCount > 0) {
-        hilog.warn(0x0001, 'DataBackupManager', 'restoreFromBackup skipped %{public}d invalid keys', skippedCount.toString());
+        hilog.warn(
+          0x0001,
+          'DataBackupManager',
+          'restoreFromBackup skipped %{public}d invalid keys',
+          skippedCount.toString()
+        );
       }
 
       Object.keys(grouped).forEach(prefName => {

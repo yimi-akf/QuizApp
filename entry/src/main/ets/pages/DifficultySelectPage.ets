@@ -14,7 +14,7 @@ export struct DifficultySelectPage {
   @Consume('pageStack') pageStack: NavPathStack
   @StorageLink('quizThemeIndex') @Watch('onThemeIndexChange') themeIndex: number = 0;
   @State theme: AppTheme = THEMES[0];
-  topic: Topic = Topic.KNOWLEDGE;
+  public topic: Topic = Topic.KNOWLEDGE;
   @State selectedDifficulty: Difficulty | 'mixed' | null = null;
   @State selectedMode: QuizMode = QuizMode.NORMAL;
 

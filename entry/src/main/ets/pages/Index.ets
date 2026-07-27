@@ -119,18 +119,22 @@ struct Index {
       this.FloatingTabItem('收藏', '⭐', 1)
       this.FloatingTabItem('我的', '👤', 2)
     }
-    .width(260)
-    .height(56)
-    .backgroundColor('rgba(255,255,255,0.42)')
-    .borderRadius(28)
-    .backdropBlur(28)
-    .shadow({
-      radius: 20,
-      color: 'rgba(0,0,0,0.10)',
-      offsetX: 0,
-      offsetY: 6
+    .width(280)
+    .height(60)
+    .backgroundColor('rgba(255,255,255,0.55)')
+    .borderRadius(30)
+    .backgroundBlurStyle(BlurStyle.COMPONENT_ULTRA_THICK, {
+      colorMode: ThemeColorMode.LIGHT,
+      adaptiveColor: AdaptiveColor.DEFAULT
     })
-    .margin({ bottom: 16 })
+    .border({ width: 1, color: 'rgba(255,255,255,0.65)' })
+    .shadow({
+      radius: 30,
+      color: 'rgba(0,0,0,0.12)',
+      offsetX: 0,
+      offsetY: 8
+    })
+    .margin({ bottom: 18 })
   }
 
   build() {

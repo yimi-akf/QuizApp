@@ -68,7 +68,7 @@ export struct MineTab {
         uri: PRIVACY_URL
       });
     } catch (e) {
-      hilog.error(0x0000, 'MineTab', 'open privacy policy failed');
+      hilog.error(0x0000, 'MineTab', 'open privacy policy failed: %{public}s', JSON.stringify(e));
     }
   }
 

@@ -2,6 +2,7 @@ import common from '@ohos.app.ability.common';
 import { AchievementStorage, Achievement, UserStats } from '../data/AchievementStorage';
 import { AppTheme, THEMES } from '../model/AppTheme';
 import { ThemeManager } from '../data/ThemeManager';
+import { popSafe } from '../utils/NavUtil';
 
 // 成就页
 @Component
@@ -37,11 +38,7 @@ export struct AchievementPage {
   }
 
   goBack() {
-    try {
-      this.pageStack.pop();
-    } catch (e) {
-      // ignore
-    }
+    popSafe(this.pageStack);
   }
 
   build() {

@@ -5,6 +5,7 @@ import { AppTheme, THEMES } from '../model/AppTheme';
 import { ThemeManager } from '../data/ThemeManager';
 import { EmptyState } from '../components/EmptyState';
 import { formatTime } from '../utils/FormatUtil';
+import { popSafe } from '../utils/NavUtil';
 
 // 统计看板页
 @Component
@@ -53,11 +54,7 @@ export struct StatsPage {
   }
 
   goBack() {
-    try {
-      this.pageStack.pop();
-    } catch (e) {
-      // ignore
-    }
+    popSafe(this.pageStack);
   }
 
   accuracyValue(): number {

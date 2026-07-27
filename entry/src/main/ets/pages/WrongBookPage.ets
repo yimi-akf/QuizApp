@@ -6,6 +6,7 @@ import { AppTheme, THEMES } from '../model/AppTheme';
 import { ThemeManager } from '../data/ThemeManager';
 import { EmptyState } from '../components/EmptyState';
 import { typeLabel } from '../utils/FormatUtil';
+import { popSafe } from '../utils/NavUtil';
 import { QuizPageParams } from './QuizPage';
 
 // 错题本页
@@ -50,11 +51,7 @@ export struct WrongBookPage {
   }
 
   goBack() {
-    try {
-      this.pageStack.pop();
-    } catch (e) {
-      // ignore
-    }
+    popSafe(this.pageStack);
   }
 
   startWrongPractice() {

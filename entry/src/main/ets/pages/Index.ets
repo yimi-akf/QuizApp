@@ -1,4 +1,5 @@
 import common from '@ohos.app.ability.common';
+import curves from '@ohos.curves';
 import { ThemeManager } from '../data/ThemeManager';
 import { AppTheme, THEMES } from '../model/AppTheme';
 import { TypeSelectPage } from './TypeSelectPage';
@@ -96,14 +97,14 @@ struct Index {
         .fontSize(22)
         .fontColor(this.currentTabIndex === index ? this.theme.primary : this.theme.tabInactive)
         .scale({ x: this.currentTabIndex === index ? 1.15 : 1, y: this.currentTabIndex === index ? 1.15 : 1 })
-        .animation({ duration: 250, curve: Curve.EaseOut })
+        .animation({ duration: 300, curve: curves.springMotion(0.3, 0.9) })
 
       Text(title)
         .fontSize(10)
         .fontColor(this.currentTabIndex === index ? this.theme.primary : this.theme.tabInactive)
         .fontWeight(this.currentTabIndex === index ? FontWeight.Medium : FontWeight.Normal)
         .opacity(this.currentTabIndex === index ? 1 : 0.7)
-        .animation({ duration: 250, curve: Curve.EaseOut })
+        .animation({ duration: 300, curve: curves.springMotion(0.3, 0.9) })
     }
     .width(86)
     .height(56)
@@ -127,16 +128,16 @@ struct Index {
     }
     .width(280)
     .height(60)
-    .backgroundColor(this.theme.glassBg)
+    .backgroundColor('rgba(255,255,255,0.48)')
     .borderRadius(30)
-    .backgroundBlurStyle(BlurStyle.BACKGROUND_ULTRA_THICK, {
+    .backgroundBlurStyle(BlurStyle.COMPONENT_THICK, {
       colorMode: ThemeColorMode.LIGHT,
       adaptiveColor: AdaptiveColor.DEFAULT
     })
-    .border({ width: 1.5, color: this.theme.glassBorder })
+    .border({ width: 1.5, color: 'rgba(255,255,255,0.75)' })
     .shadow({
       radius: 40,
-      color: 'rgba(0,0,0,0.15)',
+      color: 'rgba(0,0,0,0.10)',
       offsetX: 0,
       offsetY: 12
     })

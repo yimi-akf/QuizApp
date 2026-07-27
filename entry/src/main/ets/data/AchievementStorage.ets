@@ -2,6 +2,7 @@ import dataPreferences from '@ohos.data.preferences';
 import common from '@ohos.app.ability.common';
 import { formatDateTime, formatDate, todayString } from '../utils/DateUtil';
 import hilog from '@ohos.hilog';
+import { Topic } from '../model/Question';
 
 const PREFERENCES_NAME = 'quiz_achievement';
 const KEY_USER_STATS = 'user_stats';
@@ -236,7 +237,7 @@ export class AchievementStorage {
   }
 
   // 记录主题通关
-  static recordTopicMastery(context: common.UIAbilityContext, topic: string): void {
+  static recordTopicMastery(context: common.UIAbilityContext, topic: Topic): void {
     if (topic === 'knowledge') {
       AchievementStorage.unlockAchievement(context, 'master_knowledge');
     } else if (topic === 'reasoning') {

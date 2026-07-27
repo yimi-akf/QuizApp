@@ -7,8 +7,9 @@ import { AppTheme, THEMES } from '../model/AppTheme';
 import { ThemeManager } from '../data/ThemeManager';
 import { WrongBookStorage } from '../data/WrongBookStorage';
 import { FavoriteStorage } from '../data/FavoriteStorage';
-import { formatTime, topicShortLabel, difficultyLabel as utilDifficultyLabel } from '../utils/FormatUtil';
+import { formatTime, topicShortLabel, difficultyLabel as utilDifficultyLabel, difficultyColor } from '../utils/FormatUtil';
 import { shuffleArray } from '../utils/ArrayUtil';
+import { SkeletonCard } from '../components/SkeletonCard';
 import hilog from '@ohos.hilog';
 
 const EMPTY_QUESTION: Question = {
@@ -26,17 +27,20 @@ const TIME_ATTACK_TOTAL_SECONDS = 60;
 
 @Styles
 function optionPressedStyle() {
-  .scale({ x: 0.98, y: 0.98 })
+  .scale({ x: 0.96, y: 0.96 })
+  .opacity(0.85)
 }
 
 @Styles
 function optionNormalStyle() {
   .scale({ x: 1, y: 1 })
+  .opacity(1)
 }
 
 @Styles
 function quizButtonPressedStyle() {
   .scale({ x: 0.97, y: 0.97 })
+  .opacity(0.9)
 }
 
 @Styles
@@ -101,6 +105,7 @@ export struct QuizPage {
   @State contentOffset: number = 30;
   // 当前题目收藏状态
   @State isFavorite: boolean = false;
+  @State isLoading: boolean = true;
 
   aboutToAppear() {
     const params = this.param;
@@ -198,6 +203,7 @@ export struct QuizPage {
 
     // 初始化收藏状态
     this.loadFavoriteState();
+    this.isLoading = false;
   }
 
   // 加载当前题目的收藏状态
@@ -287,7 +293,7 @@ export struct QuizPage {
         } as ResultPageParams
       });
     } catch (e) {
-      hilog.error(0x0000, 'QuizPage', 'navigate to Result failed');
+      hilog.error(0x0000, 'QuizPage', 'navigate to Result failed: %{public}s', JSON.stringify(e));
     }
   }
 
@@ -515,7 +521,7 @@ export struct QuizPage {
         } as ResultPageParams
       });
     } catch (e) {
-      hilog.error(0x0000, 'QuizPage', 'navigate to Result failed');
+      hilog.error(0x0000, 'QuizPage', 'navigate to Result failed: %{public}s', JSON.stringify(e));
     }
   }
 
@@ -614,7 +620,7 @@ export struct QuizPage {
       try {
         this.pageStack.clear();
       } catch (e) {
-        hilog.error(0x0000, 'QuizPage', 'clear stack failed');
+        hilog.error(0x0000, 'QuizPage', 'clear stack failed: %{public}s', JSON.stringify(e));
       }
       return;
     }
@@ -644,7 +650,7 @@ export struct QuizPage {
           } as ResultPageParams
         });
       } catch (e) {
-        hilog.error(0x0000, 'QuizPage', 'navigate to Result failed');
+        hilog.error(0x0000, 'QuizPage', 'navigate to Result failed: %{public}s', JSON.stringify(e));
       }
     }
   }
@@ -671,6 +677,9 @@ export struct QuizPage {
 
   build() {
     Column() {
+      if (this.isLoading) {
+        SkeletonCard({ theme: this.theme })
+      } else {
       this.ProgressBar()
 
       Scroll() {
@@ -691,8 +700,23 @@ export struct QuizPage {
         curve: Curve.EaseOut,
         delay: 150
       })
+      .gesture(
+        SwipeGesture({ speed: 0.3, direction: SwipeDirection.Horizontal })
+          .onAction((event: GestureEvent) => {
+            if (event.angle < 0) {
+              // 向左滑 → 下一题
+              if (this.canGoNext()) {
+                this.onNext();
+              }
+            } else {
+              // 向右滑 → 上一题
+              this.onPrevious();
+            }
+          })
+      )
 
       this.BottomButton()
+      }
     }
     .width('100%')
     .height('100%')
@@ -719,7 +743,7 @@ export struct QuizPage {
           Text(this.difficultyLabel(this.currentQuestion().difficulty))
             .fontSize(12)
             .fontColor(this.theme.textOnPrimary)
-            .backgroundColor(this.difficultyColor(this.currentQuestion().difficulty))
+            .backgroundColor(difficultyColor(this.theme, this.currentQuestion().difficulty))
             .padding({ left: 8, right: 8, top: 3, bottom: 3 })
             .borderRadius(8)
 
@@ -1013,10 +1037,10 @@ export struct QuizPage {
       return this.theme.primary;
     }
     if (index === this.currentQuestion().correctIndex) {
-      return '#FFFFFF';
+      return this.theme.textOnPrimary;
     }
     if (index === this.userAnswers[this.currentIndex]) {
-      return '#FFFFFF';
+      return this.theme.textOnPrimary;
     }
     return this.theme.primary;
   }
@@ -1066,15 +1090,6 @@ export struct QuizPage {
       case QuestionType.TRUE_FALSE: return '判断';
       case QuestionType.SHORT_ANSWER: return '简答';
       default: return '';
-    }
-  }
-
-  difficultyColor(difficulty: Difficulty): string {
-    switch (difficulty) {
-      case Difficulty.ENTRY: return this.theme.success;
-      case Difficulty.ADVANCED: return this.theme.warning;
-      case Difficulty.CHALLENGE: return this.theme.error;
-      default: return '#9C27B0';
     }
   }
 

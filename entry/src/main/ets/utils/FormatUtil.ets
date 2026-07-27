@@ -1,6 +1,7 @@
 // 格式化与标签工具函数
 
 import { Difficulty, Topic, QuestionType } from '../model/Question';
+import { AppTheme } from '../model/AppTheme';
 
 export function topicLabel(topic: Topic): string {
   switch (topic) {
@@ -27,6 +28,15 @@ export function difficultyLabel(difficulty: Difficulty | 'mixed'): string {
     case Difficulty.CHALLENGE: return '挑战';
     case 'mixed': return '混合乱序';
     default: return '';
+  }
+}
+
+export function difficultyColor(theme: AppTheme, difficulty: Difficulty | 'mixed'): string {
+  switch (difficulty) {
+    case Difficulty.ENTRY: return theme.success;
+    case Difficulty.ADVANCED: return theme.warning;
+    case Difficulty.CHALLENGE: return theme.error;
+    default: return theme.primary;
   }
 }
 

@@ -48,9 +48,9 @@ export const THEMES: AppTheme[] = [
     overlayScrim: 'rgba(0,0,0,0.45)',
     glassBg: 'rgba(255,255,255,0.28)',
     glassBorder: 'rgba(255,255,255,0.55)',
-    optionCorrectBg: '#E8F5E9',
-    optionWrongBg: '#FFEBEE',
-    optionDefaultBg: '#F5F7FA'
+    optionCorrectBg: '#C8E6C9',
+    optionWrongBg: '#FFCDD2',
+    optionDefaultBg: '#E3F2FD'
   },
   {
     name: '清新绿',
@@ -73,9 +73,9 @@ export const THEMES: AppTheme[] = [
     overlayScrim: 'rgba(0,0,0,0.45)',
     glassBg: 'rgba(255,255,255,0.28)',
     glassBorder: 'rgba(255,255,255,0.55)',
-    optionCorrectBg: '#E8F5E9',
-    optionWrongBg: '#FFEBEE',
-    optionDefaultBg: '#F5F7FA'
+    optionCorrectBg: '#C8E6C9',
+    optionWrongBg: '#FFCDD2',
+    optionDefaultBg: '#F1F8E9'
   },
   {
     name: '浅紫色',
@@ -98,9 +98,9 @@ export const THEMES: AppTheme[] = [
     overlayScrim: 'rgba(0,0,0,0.45)',
     glassBg: 'rgba(255,255,255,0.28)',
     glassBorder: 'rgba(255,255,255,0.55)',
-    optionCorrectBg: '#E8F5E9',
-    optionWrongBg: '#FFEBEE',
-    optionDefaultBg: '#F5F7FA'
+    optionCorrectBg: '#C8E6C9',
+    optionWrongBg: '#FFCDD2',
+    optionDefaultBg: '#F3E5F5'
   },
   {
     name: '暖橙色',
@@ -123,9 +123,9 @@ export const THEMES: AppTheme[] = [
     overlayScrim: 'rgba(0,0,0,0.45)',
     glassBg: 'rgba(255,255,255,0.28)',
     glassBorder: 'rgba(255,255,255,0.55)',
-    optionCorrectBg: '#E8F5E9',
-    optionWrongBg: '#FFEBEE',
-    optionDefaultBg: '#F5F7FA'
+    optionCorrectBg: '#C8E6C9',
+    optionWrongBg: '#FFCDD2',
+    optionDefaultBg: '#FFF3E0'
   },
   {
     name: '玫瑰红',
@@ -148,9 +148,9 @@ export const THEMES: AppTheme[] = [
     overlayScrim: 'rgba(0,0,0,0.45)',
     glassBg: 'rgba(255,255,255,0.28)',
     glassBorder: 'rgba(255,255,255,0.55)',
-    optionCorrectBg: '#E8F5E9',
-    optionWrongBg: '#FFEBEE',
-    optionDefaultBg: '#F5F7FA'
+    optionCorrectBg: '#C8E6C9',
+    optionWrongBg: '#FFCDD2',
+    optionDefaultBg: '#FFEBEE'
   },
   {
     name: '深空灰',
@@ -173,9 +173,9 @@ export const THEMES: AppTheme[] = [
     overlayScrim: 'rgba(0,0,0,0.45)',
     glassBg: 'rgba(255,255,255,0.28)',
     glassBorder: 'rgba(255,255,255,0.55)',
-    optionCorrectBg: '#E8F5E9',
-    optionWrongBg: '#FFEBEE',
-    optionDefaultBg: '#F5F7FA'
+    optionCorrectBg: '#C8E6C9',
+    optionWrongBg: '#FFCDD2',
+    optionDefaultBg: '#ECEFF1'
   }
 ];
 

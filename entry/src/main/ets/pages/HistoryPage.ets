@@ -1,10 +1,9 @@
 import common from '@ohos.app.ability.common';
 import { HistoryRecord, HistoryStorage } from '../data/HistoryStorage';
-import { Difficulty } from '../model/Question';
 import { AppTheme, THEMES } from '../model/AppTheme';
 import { ThemeManager } from '../data/ThemeManager';
-import { topicLabel, difficultyLabel, formatTime } from '../utils/FormatUtil';
-import hilog from '@ohos.hilog';
+import { topicLabel, difficultyLabel, formatTime, difficultyColor } from '../utils/FormatUtil';
+import { popSafe } from '../utils/NavUtil';
 
 // 答题历史页：展示历史答题记录列表
 @Component
@@ -41,11 +40,7 @@ export struct HistoryPage {
   }
 
   goBack() {
-    try {
-      this.pageStack.pop()
-    } catch (e) {
-      hilog.error(0x0000, 'HistoryPage', 'pop failed')
-    }
+    popSafe(this.pageStack)
   }
 
   clearHistory() {
@@ -53,16 +48,6 @@ export struct HistoryPage {
     HistoryStorage.clearRecords(context)
     this.records = []
     this.showClearDialog = false
-  }
-
-  difficultyColor(difficulty: Difficulty | 'mixed'): string {
-    switch (difficulty) {
-      case Difficulty.ENTRY: return this.theme.success;
-      case Difficulty.ADVANCED: return this.theme.warning;
-      case Difficulty.CHALLENGE: return this.theme.error;
-      case 'mixed': return '#9C27B0';
-      default: return this.theme.textSecondary;
-    }
   }
 
   build() {
@@ -293,9 +278,9 @@ export struct HistoryPage {
 
           Text(difficultyLabel(record.difficulty))
             .fontSize(12)
-            .fontColor(this.difficultyColor(record.difficulty))
+            .fontColor(difficultyColor(this.theme, record.difficulty))
             .padding({ left: 8, right: 8, top: 2, bottom: 2 })
-            .backgroundColor(`${this.difficultyColor(record.difficulty)}14`)
+            .backgroundColor(`${difficultyColor(this.theme, record.difficulty)}14`)
             .borderRadius(8)
         }
         .width('100%')

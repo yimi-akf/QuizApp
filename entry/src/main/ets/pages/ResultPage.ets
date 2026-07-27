@@ -230,7 +230,7 @@ export struct ResultPage {
     try {
       HistoryStorage.saveRecord(context, record);
     } catch (e) {
-      hilog.error(0x0000, 'ResultPage', 'saveHistoryRecord failed');
+      hilog.error(0x0000, 'ResultPage', 'saveHistoryRecord failed: %{public}s', JSON.stringify(e));
     }
   }
 
@@ -273,7 +273,7 @@ export struct ResultPage {
       }
 
     } catch (e) {
-      hilog.error(0x0000, 'ResultPage', 'saveExtendedResults failed');
+      hilog.error(0x0000, 'ResultPage', 'saveExtendedResults failed: %{public}s', JSON.stringify(e));
     }
   }
 
@@ -415,7 +415,7 @@ export struct ResultPage {
               try {
                 this.pageStack.clear();
               } catch (e) {
-                hilog.error(0x0000, 'ResultPage', 'clear stack failed');
+                hilog.error(0x0000, 'ResultPage', 'clear stack failed: %{public}s', JSON.stringify(e));
               }
             }, 50);
           })

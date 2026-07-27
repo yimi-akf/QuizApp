@@ -2,6 +2,7 @@ import dataPreferences from '@ohos.data.preferences';
 import common from '@ohos.app.ability.common';
 import hilog from '@ohos.hilog';
 import { HistoryRecord } from './HistoryStorage';
+import { Topic, Difficulty } from '../model/Question';
 
 const PREFERENCES_NAME = 'quiz_stats';
 const KEY_TOPIC_PROGRESS = 'topic_progress';
@@ -80,8 +81,8 @@ export class StatsStorage {
   // 标记某主题某难度已完成
   static markDifficultyCompleted(
     context: common.UIAbilityContext,
-    topic: string,
-    difficulty: string
+    topic: Topic,
+    difficulty: Difficulty
   ): void {
     const progress = StatsStorage.loadTopicProgress(context);
     let item = progress.find(p => p.topic === topic);

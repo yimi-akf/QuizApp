@@ -4,10 +4,19 @@ import hilog from '@ohos.hilog';
 
 const PREFERENCES_NAME = 'quiz_favorite';
 const KEY_FAVORITES = 'favorite_questions';
+const KEY_GROUPS = 'favorite_groups';
+const GROUP_DEFAULT_ID = 0;
 
 export interface FavoriteRecord {
   questionId: number;
   addedAt: string;
+  groupId: number;
+}
+
+export interface FavoriteGroup {
+  id: number;
+  name: string;
+  createdAt: string;
 }
 
 // 收藏题目本地存储
@@ -36,7 +45,17 @@ export class FavoriteStorage {
       if (!Array.isArray(parsed)) {
         return [];
       }
-      return parsed;
+      // 兼容旧数据：为没有 groupId 的记录补上默认分组
+      return parsed.map(r => {
+        if (r.groupId === undefined) {
+          return {
+            questionId: r.questionId,
+            addedAt: r.addedAt,
+            groupId: GROUP_DEFAULT_ID
+          } as FavoriteRecord;
+        }
+        return r;
+      });
     } catch (e) {
       hilog.error(0x0000, 'FavoriteStorage', 'loadRecords failed');
       return [];
@@ -71,7 +90,8 @@ export class FavoriteStorage {
     }
     records.unshift({
       questionId,
-      addedAt: new Date().toISOString()
+      addedAt: new Date().toISOString(),
+      groupId: GROUP_DEFAULT_ID
     });
     FavoriteStorage.saveRecords(context, records);
   }
@@ -96,7 +116,8 @@ export class FavoriteStorage {
       // 未收藏 → 添加
       records.unshift({
         questionId,
-        addedAt: new Date().toISOString()
+        addedAt: new Date().toISOString(),
+        groupId: GROUP_DEFAULT_ID
       });
       FavoriteStorage.saveRecords(context, records);
       return true;
@@ -121,5 +142,113 @@ export class FavoriteStorage {
     } catch (e) {
       hilog.error(0x0000, 'FavoriteStorage', 'clearAll failed');
     }
+  }
+
+  // ============ 分组管理 ============
+
+  // 读取所有分组
+  static loadGroups(context: common.UIAbilityContext): FavoriteGroup[] {
+    const prefs = FavoriteStorage.getPreferences(context);
+    if (!prefs) {
+      return [];
+    }
+    try {
+      const value = prefs.getSync(KEY_GROUPS, '') as string;
+      if (!value) {
+        return [];
+      }
+      const parsed = JSON.parse(value) as FavoriteGroup[];
+      if (!Array.isArray(parsed)) {
+        return [];
+      }
+      return parsed;
+    } catch (e) {
+      hilog.error(0x0000, 'FavoriteStorage', 'loadGroups failed');
+      return [];
+    }
+  }
+
+  // 保存分组列表
+  private static saveGroups(context: common.UIAbilityContext, groups: FavoriteGroup[]): void {
+    const prefs = FavoriteStorage.getPreferences(context);
+    if (!prefs) {
+      return;
+    }
+    try {
+      prefs.putSync(KEY_GROUPS, JSON.stringify(groups));
+      prefs.flushSync();
+    } catch (e) {
+      hilog.error(0x0000, 'FavoriteStorage', 'saveGroups failed');
+    }
+  }
+
+  // 创建分组
+  static createGroup(context: common.UIAbilityContext, name: string): FavoriteGroup | null {
+    const groups = FavoriteStorage.loadGroups(context);
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      return null;
+    }
+    const newGroup: FavoriteGroup = {
+      id: Date.now(),
+      name: trimmedName,
+      createdAt: new Date().toISOString()
+    };
+    groups.push(newGroup);
+    FavoriteStorage.saveGroups(context, groups);
+    return newGroup;
+  }
+
+  // 删除分组（分组内的收藏移回默认分组）
+  static deleteGroup(context: common.UIAbilityContext, groupId: number): void {
+    if (groupId === GROUP_DEFAULT_ID) {
+      return;
+    }
+    const groups = FavoriteStorage.loadGroups(context);
+    const filtered = groups.filter(g => g.id !== groupId);
+    FavoriteStorage.saveGroups(context, filtered);
+
+    // 将该分组下的收藏移回默认分组
+    const records = FavoriteStorage.loadRecords(context);
+    const updated = records.map(r => {
+      if (r.groupId === groupId) {
+        return {
+          questionId: r.questionId,
+          addedAt: r.addedAt,
+          groupId: GROUP_DEFAULT_ID
+        } as FavoriteRecord;
+      }
+      return r;
+    });
+    FavoriteStorage.saveRecords(context, updated);
+  }
+
+  // 重命名分组
+  static renameGroup(context: common.UIAbilityContext, groupId: number, newName: string): void {
+    const groups = FavoriteStorage.loadGroups(context);
+    const trimmedName = newName.trim();
+    if (!trimmedName) {
+      return;
+    }
+    const group = groups.find(g => g.id === groupId);
+    if (group) {
+      group.name = trimmedName;
+      FavoriteStorage.saveGroups(context, groups);
+    }
+  }
+
+  // 将收藏题目移动到指定分组
+  static moveToGroup(context: common.UIAbilityContext, questionId: number, groupId: number): void {
+    const records = FavoriteStorage.loadRecords(context);
+    const record = records.find(r => r.questionId === questionId);
+    if (record) {
+      record.groupId = groupId;
+      FavoriteStorage.saveRecords(context, records);
+    }
+  }
+
+  // 获取默认分组 ID
+  static getDefaultGroupId(): number {
+    return GROUP_DEFAULT_ID;
   }
 }

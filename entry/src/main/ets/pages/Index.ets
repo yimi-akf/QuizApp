@@ -178,6 +178,7 @@ struct Index {
       .width('100%')
       .height('100%')
       .backgroundColor(this.theme.background)
+      .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM])
     }
     .navDestination(this.pageMap)
     .hideTitleBar(true)

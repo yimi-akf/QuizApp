@@ -128,7 +128,7 @@ export struct MineTab {
         .fontColor(this.theme.textSecondary)
     }
     .width('100%')
-    .height(56)
+    .height(64)
     .padding({ left: 16, right: 16 })
     .backgroundColor(this.theme.card)
     .borderRadius(16)
@@ -498,7 +498,7 @@ export struct MineTab {
         .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP])
 
         // 设置项列表
-        Column({ space: 10 }) {
+        Column({ space: 12 }) {
           // 主题换肤项需要直接读取 currentThemeName，不能通过 @Builder 参数传递，否则状态变化不刷新
           Row() {
             Text('🎨')
@@ -524,7 +524,7 @@ export struct MineTab {
               .fontColor(this.theme.textSecondary)
           }
           .width('100%')
-          .height(56)
+          .height(64)
           .padding({ left: 16, right: 16 })
           .backgroundColor(this.theme.card)
           .borderRadius(16)
@@ -555,7 +555,7 @@ export struct MineTab {
         }
         .width('100%')
         .layoutWeight(1)
-        .padding({ left: 20, right: 20, top: 16, bottom: 20 })
+        .padding({ left: 20, right: 20, top: 20, bottom: 20 })
         .backgroundColor(this.theme.background)
         .opacity(this.contentOpacity)
         .translate({ y: this.contentOffset })

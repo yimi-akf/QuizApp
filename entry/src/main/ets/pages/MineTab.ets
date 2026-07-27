@@ -499,7 +499,41 @@ export struct MineTab {
 
         // 设置项列表
         Column({ space: 12 }) {
-          this.SettingItem('🎨', '主题换肤', `当前：${this.currentThemeName}`, () => {
+          // 主题换肤项需要直接读取 currentThemeName，不能通过 @Builder 参数传递，否则状态变化不刷新
+          Row() {
+            Text('🎨')
+              .fontSize(26)
+              .margin({ right: 16 })
+
+            Column() {
+              Text('主题换肤')
+                .fontSize(16)
+                .fontWeight(FontWeight.Medium)
+                .fontColor(this.theme.textPrimary)
+
+              Text(`当前：${this.currentThemeName}`)
+                .fontSize(12)
+                .fontColor(this.theme.textSecondary)
+                .margin({ top: 2 })
+            }
+            .alignItems(HorizontalAlign.Start)
+            .layoutWeight(1)
+
+            Text('›')
+              .fontSize(22)
+              .fontColor(this.theme.textSecondary)
+          }
+          .width('100%')
+          .height(64)
+          .padding({ left: 16, right: 16 })
+          .backgroundColor(this.theme.card)
+          .borderRadius(16)
+          .alignItems(VerticalAlign.Center)
+          .stateStyles({
+            pressed: { .scale({ x: 0.98, y: 0.98 }) },
+            normal: { .scale({ x: 1, y: 1 }) }
+          })
+          .onClick(() => {
             this.showThemeDialog = true;
           })
 

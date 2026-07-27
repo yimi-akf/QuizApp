@@ -124,12 +124,13 @@ export struct FavoriteTab {
       .alignItems(HorizontalAlign.Start)
       .layoutWeight(1)
 
-      Button('★')
-        .fontSize(18)
+      Text('★')
+        .fontSize(22)
         .fontColor(this.theme.warning)
-        .backgroundColor('transparent')
-        .width(40)
-        .height(40)
+        .width(44)
+        .height(44)
+        .textAlign(TextAlign.Center)
+        .padding({ top: 9 })
         .stateStyles({
           pressed: { .scale({ x: 0.85, y: 0.85 }) },
           normal: { .scale({ x: 1, y: 1 }) }

@@ -168,7 +168,7 @@ struct Index {
         .barMode(BarMode.Fixed)
         .barHeight(0)
         .backgroundColor(Color.Transparent)
-        .padding({ bottom: 80 })
+        .padding({ bottom: 92 })
         .onChange((index: number) => {
           this.currentTabIndex = index;
         })

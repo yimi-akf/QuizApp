@@ -152,7 +152,7 @@ export struct HomeTab {
         .alignItems(HorizontalAlign.Center)
       }
       .width('100%')
-      .height(220)
+      .height(180)
       .padding({ top: 0, bottom: 0, left: 20, right: 20 })
       .opacity(this.headerOpacity)
       .translate({ y: this.headerOffset })
@@ -205,7 +205,7 @@ export struct HomeTab {
             .alignItems(VerticalAlign.Center)
           }
           .width('100%')
-          .padding(16)
+          .padding(14)
           .backgroundColor(this.theme.card)
           .borderRadius(20)
           .shadow({
@@ -258,12 +258,12 @@ export struct HomeTab {
         .columnsGap(12)
         .rowsGap(12)
         .width('100%')
-        .height(360)
+        .layoutWeight(1)
         .scrollBar(BarState.Off)
       }
       .width('100%')
       .layoutWeight(1)
-      .padding({ left: 20, right: 20, top: 20, bottom: 20 })
+      .padding({ left: 20, right: 20, top: 16, bottom: 16 })
       .backgroundColor(this.theme.background)
       .opacity(this.contentOpacity)
       .translate({ y: this.contentOffset })

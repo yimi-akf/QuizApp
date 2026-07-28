@@ -38,7 +38,7 @@ export class StatsStorage {
     try {
       return dataPreferences.getPreferencesSync(context, { name: PREFERENCES_NAME });
     } catch (e) {
-      hilog.error(0x0000, 'StatsStorage', 'getPreferences failed');
+      hilog.error(0x0001, 'StatsStorage', 'getPreferences failed');
       return null;
     }
   }
@@ -60,7 +60,7 @@ export class StatsStorage {
       }
       return parsed;
     } catch (e) {
-      hilog.error(0x0000, 'StatsStorage', 'loadTopicProgress failed');
+      hilog.error(0x0001, 'StatsStorage', 'loadTopicProgress failed');
       return [];
     }
   }
@@ -74,7 +74,7 @@ export class StatsStorage {
       prefs.putSync(KEY_TOPIC_PROGRESS, JSON.stringify(progress));
       prefs.flushSync();
     } catch (e) {
-      hilog.error(0x0000, 'StatsStorage', 'saveTopicProgress failed');
+      hilog.error(0x0001, 'StatsStorage', 'saveTopicProgress failed');
     }
   }
 
@@ -95,18 +95,20 @@ export class StatsStorage {
       };
       progress.push(item);
     }
-    if (difficulty === 'entry') {
+    if (difficulty === Difficulty.ENTRY) {
       item.entryCompleted = true;
-    } else if (difficulty === 'advanced') {
+    } else if (difficulty === Difficulty.ADVANCED) {
       item.advancedCompleted = true;
-    } else if (difficulty === 'challenge') {
+    } else if (difficulty === Difficulty.CHALLENGE) {
       item.challengeCompleted = true;
     }
     StatsStorage.saveTopicProgress(context, progress);
   }
 
   // 根据历史记录计算综合统计
-  static computeStats(records: HistoryRecord[]): QuizStats {
+  // topicProgress 为存储派生数据（非 records 计算），由调用方通过 loadTopicProgress 加载后传入；
+  // 若未传入则默认空数组，避免 computeStats 隐式返回恒空数组造成语义混淆
+  static computeStats(records: HistoryRecord[], topicProgress: TopicProgress[] = []): QuizStats {
     const totalQuizzes = records.length;
     let totalQuestions = 0;    // 累计出题总数
     let totalAnswered = 0;     // 累计实际已答题数（正确率分母）
@@ -148,7 +150,7 @@ export class StatsStorage {
       averageScore,
       bestScore,
       totalTimeSeconds,
-      topicProgress: [],
+      topicProgress,
       dailyStats
     };
   }
@@ -163,7 +165,7 @@ export class StatsStorage {
       prefs.clearSync();
       prefs.flushSync();
     } catch (e) {
-      hilog.error(0x0000, 'StatsStorage', 'clearAll failed');
+      hilog.error(0x0001, 'StatsStorage', 'clearAll failed');
     }
   }
 }

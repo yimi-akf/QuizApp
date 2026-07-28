@@ -18,13 +18,13 @@
         "name": "release",
         "type": "HarmonyOS",
         "material": {
-          "storeFile": "C:/Users/11236/Desktop/wode/GR.p12",
+          "storeFile": "C:/Users/11236/Desktop/harm/document/GR.p12",
           "storePassword": "0000001980F6165C3A497C455A1C29B726567F9F8B0E53F3BDD56F9D7D7117E3ACFA325048419156CB",
           "keyAlias": "QuizAppKey",
           "keyPassword": "00000019141BD21A0A050C1F7015F3E8D298B6FDF00A6CFE6C3453BE1FAB5764933BA5E9DF855F24B1",
           "signAlg": "SHA256withECDSA",
-          "profile": "C:/Users/11236/Desktop/wode/QuizApp_ReleaseRelease.p7b",
-          "certpath": "C:/Users/11236/Desktop/wode/QuizApp.cer"
+          "profile": "C:/Users/11236/Desktop/harm/document/QuizApp_ReleaseRelease.p7b",
+          "certpath": "C:/Users/11236/Desktop/harm/document/QuizApp.cer"
         }
       },
       {

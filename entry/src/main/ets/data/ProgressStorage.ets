@@ -32,7 +32,7 @@ export class ProgressStorage {
     try {
       return dataPreferences.getPreferencesSync(context, { name: PREFERENCES_NAME });
     } catch (e) {
-      hilog.error(0x0000, 'ProgressStorage', 'getPreferences failed');
+      hilog.error(0x0001, 'ProgressStorage', 'getPreferences failed');
       return null;
     }
   }
@@ -54,7 +54,7 @@ export class ProgressStorage {
       const parsed = JSON.parse(value) as Record<string, ProgressInfo>;
       return parsed || {};
     } catch (e) {
-      hilog.error(0x0000, 'ProgressStorage', 'loadProgressMap failed');
+      hilog.error(0x0001, 'ProgressStorage', 'loadProgressMap failed');
       return {};
     }
   }
@@ -68,7 +68,7 @@ export class ProgressStorage {
       prefs.putSync(KEY_PROGRESS_DATA, JSON.stringify(map));
       prefs.flushSync();
     } catch (e) {
-      hilog.error(0x0000, 'ProgressStorage', 'saveProgressMap failed');
+      hilog.error(0x0001, 'ProgressStorage', 'saveProgressMap failed');
     }
   }
 
@@ -94,7 +94,7 @@ export class ProgressStorage {
       prefs.putSync(KEY_LAST_PROGRESS, JSON.stringify(summary));
       prefs.flushSync();
     } catch (e) {
-      hilog.error(0x0000, 'ProgressStorage', 'saveLastProgress failed');
+      hilog.error(0x0001, 'ProgressStorage', 'saveLastProgress failed');
     }
   }
 
@@ -135,7 +135,7 @@ export class ProgressStorage {
       }
       return JSON.parse(value) as LastProgressSummary;
     } catch (e) {
-      hilog.error(0x0000, 'ProgressStorage', 'loadLastProgress failed');
+      hilog.error(0x0001, 'ProgressStorage', 'loadLastProgress failed');
       return null;
     }
   }
@@ -150,7 +150,7 @@ export class ProgressStorage {
       prefs.deleteSync(KEY_LAST_PROGRESS);
       prefs.flushSync();
     } catch (e) {
-      hilog.error(0x0000, 'ProgressStorage', 'clearLastProgress failed');
+      hilog.error(0x0001, 'ProgressStorage', 'clearLastProgress failed');
     }
   }
 
@@ -164,7 +164,7 @@ export class ProgressStorage {
       prefs.putSync(KEY_LAST_HOME_MODULE, module);
       prefs.flushSync();
     } catch (e) {
-      hilog.error(0x0000, 'ProgressStorage', 'saveLastHomeModule failed');
+      hilog.error(0x0001, 'ProgressStorage', 'saveLastHomeModule failed');
     }
   }
 
@@ -177,7 +177,7 @@ export class ProgressStorage {
     try {
       return (prefs.getSync(KEY_LAST_HOME_MODULE, '') as string) || '';
     } catch (e) {
-      hilog.error(0x0000, 'ProgressStorage', 'loadLastHomeModule failed');
+      hilog.error(0x0001, 'ProgressStorage', 'loadLastHomeModule failed');
       return '';
     }
   }
@@ -192,7 +192,7 @@ export class ProgressStorage {
       prefs.clearSync();
       prefs.flushSync();
     } catch (e) {
-      hilog.error(0x0000, 'ProgressStorage', 'clearAll failed');
+      hilog.error(0x0001, 'ProgressStorage', 'clearAll failed');
     }
   }
 }

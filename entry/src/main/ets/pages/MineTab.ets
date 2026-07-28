@@ -1,6 +1,5 @@
 import common from '@ohos.app.ability.common';
 import { ProgressStorage } from '../data/ProgressStorage';
-import { PrivacyStorage } from '../data/PrivacyStorage';
 import { HistoryStorage } from '../data/HistoryStorage';
 import { WrongBookStorage } from '../data/WrongBookStorage';
 import { AchievementStorage } from '../data/AchievementStorage';
@@ -68,7 +67,7 @@ export struct MineTab {
         uri: PRIVACY_URL
       });
     } catch (e) {
-      hilog.error(0x0000, 'MineTab', 'open privacy policy failed: %{public}s', JSON.stringify(e));
+      hilog.error(0x0001, 'MineTab', 'open privacy policy failed: %{public}s', JSON.stringify(e));
     }
   }
 
@@ -83,7 +82,6 @@ export struct MineTab {
 
   clearLocalData() {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
-    PrivacyStorage.clearAll(context);
     ProgressStorage.clearAll(context);
     HistoryStorage.clearAll(context);
     WrongBookStorage.clearAll(context);
@@ -574,7 +572,7 @@ export struct MineTab {
       if (this.showClearDialog) {
         this.DialogOverlay(
           '清除本地数据',
-          '确定要清空所有本地数据吗？这将清除答题进度、上次进度记录、答题历史、错题本、成就、收藏、主题设置以及隐私协议同意状态，且无法恢复。',
+          '确定要清空所有本地数据吗？这将清除答题进度、上次进度记录、答题历史、错题本、成就、收藏以及主题设置，且无法恢复。',
           '取消',
           '确定清除',
           (): void => {

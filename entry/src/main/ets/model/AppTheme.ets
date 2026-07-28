@@ -24,6 +24,11 @@ export interface AppTheme {
   optionCorrectBg: string;
   optionWrongBg: string;
   optionDefaultBg: string;
+  answerBg: string;
+  feedbackCorrectBg: string;
+  feedbackWrongBg: string;
+  timerBg: string;
+  timerWarningBg: string;
 }
 
 export const THEMES: AppTheme[] = [
@@ -48,9 +53,14 @@ export const THEMES: AppTheme[] = [
     overlayScrim: 'rgba(0,0,0,0.45)',
     glassBg: 'rgba(255,255,255,0.28)',
     glassBorder: 'rgba(255,255,255,0.55)',
-    optionCorrectBg: '#C8E6C9',
-    optionWrongBg: '#FFCDD2',
-    optionDefaultBg: '#E3F2FD'
+    optionCorrectBg: '#E8F5E9',
+    optionWrongBg: '#FFEBEE',
+    optionDefaultBg: '#FFFFFF',
+    answerBg: '#E3F2FD',
+    feedbackCorrectBg: '#E8F5E9',
+    feedbackWrongBg: '#FFF3E0',
+    timerBg: '#E3F2FD',
+    timerWarningBg: '#FFEBEE'
   },
   {
     name: '清新绿',
@@ -73,9 +83,14 @@ export const THEMES: AppTheme[] = [
     overlayScrim: 'rgba(0,0,0,0.45)',
     glassBg: 'rgba(255,255,255,0.28)',
     glassBorder: 'rgba(255,255,255,0.55)',
-    optionCorrectBg: '#C8E6C9',
-    optionWrongBg: '#FFCDD2',
-    optionDefaultBg: '#F1F8E9'
+    optionCorrectBg: '#E8F5E9',
+    optionWrongBg: '#FFEBEE',
+    optionDefaultBg: '#FFFFFF',
+    answerBg: '#E8F5E9',
+    feedbackCorrectBg: '#E8F5E9',
+    feedbackWrongBg: '#FFF3E0',
+    timerBg: '#E8F5E9',
+    timerWarningBg: '#FFEBEE'
   },
   {
     name: '浅紫色',
@@ -98,59 +113,74 @@ export const THEMES: AppTheme[] = [
     overlayScrim: 'rgba(0,0,0,0.45)',
     glassBg: 'rgba(255,255,255,0.28)',
     glassBorder: 'rgba(255,255,255,0.55)',
-    optionCorrectBg: '#C8E6C9',
-    optionWrongBg: '#FFCDD2',
-    optionDefaultBg: '#F3E5F5'
+    optionCorrectBg: '#E8F5E9',
+    optionWrongBg: '#FFEBEE',
+    optionDefaultBg: '#FFFFFF',
+    answerBg: '#F3E5F5',
+    feedbackCorrectBg: '#E8F5E9',
+    feedbackWrongBg: '#FFF3E0',
+    timerBg: '#F3E5F5',
+    timerWarningBg: '#FFEBEE'
   },
   {
     name: '暖橙色',
-    primary: '#E65100',
-    primaryLight: '#FF9800',
-    primaryGradientStart: '#D84315',
-    primaryGradientEnd: '#FF9800',
-    background: '#FFF3E0',
+    primary: '#F07A16',
+    primaryLight: '#FFA94D',
+    primaryGradientStart: '#E66A00',
+    primaryGradientEnd: '#FFB366',
+    background: '#FFF9F2',
     surface: '#FFFFFF',
     card: '#FFFFFF',
-    textPrimary: '#3E2723',
-    textSecondary: '#795548',
+    textPrimary: '#2C2220',
+    textSecondary: '#8D7565',
     textOnPrimary: '#FFFFFF',
     textOnPrimaryMuted: 'rgba(255,255,255,0.85)',
     success: '#43A047',
     error: '#E53935',
     warning: '#FB8C00',
-    divider: '#FFE0B2',
-    tabInactive: '#A1887F',
+    divider: '#FFEDD5',
+    tabInactive: '#C4A882',
     overlayScrim: 'rgba(0,0,0,0.45)',
     glassBg: 'rgba(255,255,255,0.28)',
     glassBorder: 'rgba(255,255,255,0.55)',
-    optionCorrectBg: '#C8E6C9',
-    optionWrongBg: '#FFCDD2',
-    optionDefaultBg: '#FFF3E0'
+    optionCorrectBg: '#E8F5E9',
+    optionWrongBg: '#FFEBEE',
+    optionDefaultBg: '#FFFFFF',
+    answerBg: '#FFF3E0',
+    feedbackCorrectBg: '#E8F5E9',
+    feedbackWrongBg: '#FFF3E0',
+    timerBg: '#FFF3E0',
+    timerWarningBg: '#FFEBEE'
   },
   {
     name: '玫瑰红',
-    primary: '#C62828',
-    primaryLight: '#EF5350',
-    primaryGradientStart: '#B71C1C',
-    primaryGradientEnd: '#EF5350',
-    background: '#FFEBEE',
+    primary: '#E54A62',
+    primaryLight: '#F58A9E',
+    primaryGradientStart: '#D93D58',
+    primaryGradientEnd: '#F58A9E',
+    background: '#FFFAFB',
     surface: '#FFFFFF',
     card: '#FFFFFF',
-    textPrimary: '#B71C1C',
-    textSecondary: '#7A5A5A',
+    textPrimary: '#2C2025',
+    textSecondary: '#9A7A82',
     textOnPrimary: '#FFFFFF',
     textOnPrimaryMuted: 'rgba(255,255,255,0.85)',
     success: '#43A047',
     error: '#E53935',
     warning: '#FB8C00',
-    divider: '#FFCDD2',
-    tabInactive: '#A89B9B',
+    divider: '#FFE0E8',
+    tabInactive: '#C8A0AA',
     overlayScrim: 'rgba(0,0,0,0.45)',
     glassBg: 'rgba(255,255,255,0.28)',
     glassBorder: 'rgba(255,255,255,0.55)',
-    optionCorrectBg: '#C8E6C9',
-    optionWrongBg: '#FFCDD2',
-    optionDefaultBg: '#FFEBEE'
+    optionCorrectBg: '#E8F5E9',
+    optionWrongBg: '#FFEBEE',
+    optionDefaultBg: '#FFFFFF',
+    answerBg: '#FFEBF0',
+    feedbackCorrectBg: '#E8F5E9',
+    feedbackWrongBg: '#FFF3E0',
+    timerBg: '#FFEBF0',
+    timerWarningBg: '#FFEBEE'
   },
   {
     name: '深空灰',
@@ -173,9 +203,14 @@ export const THEMES: AppTheme[] = [
     overlayScrim: 'rgba(0,0,0,0.45)',
     glassBg: 'rgba(255,255,255,0.28)',
     glassBorder: 'rgba(255,255,255,0.55)',
-    optionCorrectBg: '#C8E6C9',
-    optionWrongBg: '#FFCDD2',
-    optionDefaultBg: '#ECEFF1'
+    optionCorrectBg: '#E8F5E9',
+    optionWrongBg: '#FFEBEE',
+    optionDefaultBg: '#FFFFFF',
+    answerBg: '#ECEFF1',
+    feedbackCorrectBg: '#E8F5E9',
+    feedbackWrongBg: '#FFF3E0',
+    timerBg: '#ECEFF1',
+    timerWarningBg: '#FFEBEE'
   }
 ];
 

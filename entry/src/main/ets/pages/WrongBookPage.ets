@@ -1,7 +1,7 @@
 import common from '@ohos.app.ability.common';
-import { questionBank } from '../data/QuestionBank';
+import { findQuestionById } from '../data/QuestionBank';
 import { WrongBookStorage, WrongRecord } from '../data/WrongBookStorage';
-import { Question, QuestionType, Topic, QuizMode } from '../model/Question';
+import { Question, Topic, QuizMode } from '../model/Question';
 import { AppTheme, THEMES } from '../model/AppTheme';
 import { ThemeManager } from '../data/ThemeManager';
 import { EmptyState } from '../components/EmptyState';
@@ -42,7 +42,7 @@ export struct WrongBookPage {
     const unmasteredIds = WrongBookStorage.getUnmasteredQuestionIds(context);
     const questions: Question[] = [];
     unmasteredIds.forEach(id => {
-      const q = questionBank.find(item => item.id === id);
+      const q = findQuestionById(id);
       if (q) {
         questions.push(q);
       }
@@ -219,6 +219,11 @@ export struct WrongBookPage {
           Text('移除')
             .fontSize(13)
             .fontColor(this.theme.textSecondary)
+            .padding({ left: 12, right: 12, top: 6, bottom: 6 })
+            .stateStyles({
+              pressed: { .scale({ x: 0.92, y: 0.92 }) },
+              normal: { .scale({ x: 1, y: 1 }) }
+            })
             .onClick(() => this.removeQuestion(q))
         }
         .width('100%')

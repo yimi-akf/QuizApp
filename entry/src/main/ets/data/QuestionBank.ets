@@ -5008,3 +5008,11 @@ const allQuestions: Question[] = [
 
 // 导出兼容命名，供其他页面直接引用
 export const questionBank: Question[] = allQuestions;
+
+// 按 id 查找的索引，避免消费方在循环中调用 questionBank.find 造成 O(n²)
+export const questionMap: Map<number, Question> = new Map(allQuestions.map(q => [q.id, q]));
+
+// 根据 id 查找题目，O(1)
+export function findQuestionById(id: number): Question | undefined {
+  return questionMap.get(id);
+}

@@ -1,13 +1,13 @@
 import common from '@ohos.app.ability.common';
-import { questionBank } from '../data/QuestionBank';
+import { findQuestionById } from '../data/QuestionBank';
 import { HistoryStorage, createHistoryRecord } from '../data/HistoryStorage';
-import { WrongBookStorage } from '../data/WrongBookStorage';
 import { AchievementStorage } from '../data/AchievementStorage';
 import { StatsStorage } from '../data/StatsStorage';
 import { Difficulty, Question, QuestionType, Topic, QuizMode } from '../model/Question';
 import { AppTheme, THEMES } from '../model/AppTheme';
 import { ThemeManager } from '../data/ThemeManager';
 import { formatTime } from '../utils/FormatUtil';
+import { DifficultySelectParams } from './DifficultySelectPage';
 import hilog from '@ohos.hilog';
 
 @Styles
@@ -28,6 +28,8 @@ export interface ResultPageParams {
   selfAssessments?: ('pending' | 'correct' | 'wrong')[];
   elapsedSeconds?: number;
   mode?: QuizMode;
+  // 空题库标志：为 true 时不保存历史/成就，仅展示"暂无题目"提示
+  isEmptyQuiz?: boolean;
 }
 
 // 结果页：展示得分、错题回顾、再玩一次
@@ -54,6 +56,7 @@ export struct ResultPage {
   @State topic: Topic = Topic.KNOWLEDGE;
   @State difficulty: Difficulty | 'mixed' = Difficulty.ENTRY;
   @State quizMode: QuizMode = QuizMode.NORMAL;
+  @State isEmptyQuiz: boolean = false;
   // 入场动画
   @State headerOpacity: number = 0;
   @State headerScale: number = 0.9;
@@ -83,10 +86,11 @@ export struct ResultPage {
     this.userAnswers = answers;
     this.selfAssessments = selfAssessments;
     this.elapsedSeconds = elapsed;
+    this.isEmptyQuiz = !!(params && params.isEmptyQuiz);
 
     const foundQuestions: Question[] = [];
     for (let i = 0; i < questionIds.length; i++) {
-      const q = questionBank.find(item => item.id === questionIds[i]);
+      const q = findQuestionById(questionIds[i]);
       if (q !== undefined) {
         foundQuestions.push(q);
       }
@@ -119,9 +123,10 @@ export struct ResultPage {
 
     this.correctCount = count;
     this.answeredCount = answered;
-    const totalForScore = this.quizMode === QuizMode.CHALLENGE || this.quizMode === QuizMode.TIME_ATTACK
-      ? Math.max(1, answered)
-      : this.currentQuestions.length;
+    // 闯关模式：分数 = 连续答对数 / 总题数 × 100（答错即结束，未答题不计入分母）
+    // 限时模式：分数 = 答对数 / 总题数 × 100（在规定时间内答了多少题）
+    // 普通模式：分数 = 答对数 / 总题数 × 100
+    const totalForScore = this.currentQuestions.length;
     this.score = totalForScore > 0
       ? Math.round((count / totalForScore) * 100)
       : 0;
@@ -132,7 +137,10 @@ export struct ResultPage {
         ? '闯关成功！全部答对！'
         : `闯关结束，连续答对 ${count} 题`;
     } else if (this.quizMode === QuizMode.TIME_ATTACK) {
-      this.comment = `限时挑战结束，答对 ${count} 题`;
+      const total = this.currentQuestions.length;
+      this.comment = total > 0 && count === total
+        ? '太厉害了！全部答对！'
+        : `限时挑战结束，答对 ${count} 题`;
     } else if (this.score === 100) {
       this.comment = '太厉害了！全部答对！';
     } else if (this.score >= 80) {
@@ -141,6 +149,16 @@ export struct ResultPage {
       this.comment = '不错，继续努力！';
     } else {
       this.comment = '加油，多多学习！';
+    }
+
+    // 空题库：跳过历史记录与成就保存，仅展示提示
+    if (this.isEmptyQuiz) {
+      this.headerOpacity = 1;
+      this.headerScale = 1;
+      this.statsOpacity = 1;
+      this.statsOffset = 0;
+      this.listOpacity = 1;
+      return;
     }
 
     // 保存答题历史记录（普通/闯关/限时模式）
@@ -195,6 +213,8 @@ export struct ResultPage {
   aboutToDisappear() {
     this.stopScoreAnimation();
     this.clearNavTimers();
+    // 通知主页刷新"继续上次进度"卡片（答题已完成，进度已清除）
+    AppStorage.setOrCreate('homeTabShowTrigger', Date.now());
   }
 
   // 清理页面跳转定时器，避免回调已销毁组件
@@ -230,7 +250,7 @@ export struct ResultPage {
     try {
       HistoryStorage.saveRecord(context, record);
     } catch (e) {
-      hilog.error(0x0000, 'ResultPage', 'saveHistoryRecord failed: %{public}s', JSON.stringify(e));
+      hilog.error(0x0001, 'ResultPage', 'saveHistoryRecord failed: %{public}s', JSON.stringify(e));
     }
   }
 
@@ -258,8 +278,10 @@ export struct ResultPage {
             currentStreak = 0;
           }
         }
-        // 更新成就与连续打卡（错题本也计入）
-        AchievementStorage.recordQuizResult(context, this.correctCount, wrongCount, this.score, maxStreak);
+        // 更新成就与连续打卡（错题本练习不计入）
+        if (this.quizMode !== QuizMode.WRONG_BOOK) {
+          AchievementStorage.recordQuizResult(context, this.correctCount, wrongCount, this.score, maxStreak, this.currentQuestions.length);
+        }
 
         // 仅普通模式标记主题通关进度
         if (this.quizMode === QuizMode.NORMAL && this.difficulty !== 'mixed') {
@@ -273,7 +295,7 @@ export struct ResultPage {
       }
 
     } catch (e) {
-      hilog.error(0x0000, 'ResultPage', 'saveExtendedResults failed: %{public}s', JSON.stringify(e));
+      hilog.error(0x0001, 'ResultPage', 'saveExtendedResults failed: %{public}s', JSON.stringify(e));
     }
   }
 
@@ -281,33 +303,40 @@ export struct ResultPage {
     Column() {
       // 顶部得分区域
       Column() {
-        Text(this.quizMode === QuizMode.CHALLENGE ? '闯关结束' : this.quizMode === QuizMode.TIME_ATTACK ? '挑战结束' : '答题完成')
+        Text(this.isEmptyQuiz ? '暂无题目' : (this.quizMode === QuizMode.CHALLENGE ? '闯关结束' : this.quizMode === QuizMode.TIME_ATTACK ? '挑战结束' : '答题完成'))
           .fontSize(18)
           .fontColor(this.theme.textOnPrimaryMuted)
           .margin({ top: 50, bottom: 8 })
 
-        Row() {
-          Text(this.displayScore.toString())
-            .fontSize(64)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(this.theme.textOnPrimary)
-            .animation({
-              duration: 1000,
-              curve: Curve.EaseOut,
-              delay: 200
-            })
-          Text('分')
-            .fontSize(24)
+        if (this.isEmptyQuiz) {
+          Text('该分类下暂时没有题目')
+            .fontSize(16)
             .fontColor(this.theme.textOnPrimaryMuted)
-            .margin({ left: 4, bottom: 12 })
-        }
-        .width('100%')
-        .justifyContent(FlexAlign.Center)
+            .margin({ top: 4 })
+        } else {
+          Row() {
+            Text(this.displayScore.toString())
+              .fontSize(64)
+              .fontWeight(FontWeight.Bold)
+              .fontColor(this.theme.textOnPrimary)
+              .animation({
+                duration: 1000,
+                curve: Curve.EaseOut,
+                delay: 200
+              })
+            Text('分')
+              .fontSize(24)
+              .fontColor(this.theme.textOnPrimaryMuted)
+              .margin({ left: 4, bottom: 12 })
+          }
+          .width('100%')
+          .justifyContent(FlexAlign.Center)
 
-        Text(this.comment)
-          .fontSize(18)
-          .fontColor(this.theme.textOnPrimary)
-          .margin({ top: 8 })
+          Text(this.comment)
+            .fontSize(18)
+            .fontColor(this.theme.textOnPrimary)
+            .margin({ top: 8 })
+        }
       }
       .width('100%')
       .height(200)
@@ -410,39 +439,52 @@ export struct ResultPage {
             normal: resultButtonNormalStyle
           })
           .onClick(() => {
+            // 复用同一按钮快速点击时，先清理上一次未触发的定时器，避免泄漏
+            if (this.navTimerId1 !== -1) {
+              clearTimeout(this.navTimerId1);
+              this.navTimerId1 = -1;
+            }
             this.navTimerId1 = setTimeout(() => {
               this.navTimerId1 = -1;
               try {
                 this.pageStack.clear();
               } catch (e) {
-                hilog.error(0x0000, 'ResultPage', 'clear stack failed: %{public}s', JSON.stringify(e));
+                hilog.error(0x0001, 'ResultPage', 'clear stack failed: %{public}s', JSON.stringify(e));
               }
             }, 50);
           })
 
-        Button('再玩一次')
-          .layoutWeight(1)
-          .height(52)
-          .fontSize(17)
-          .fontWeight(FontWeight.Bold)
-          .backgroundColor(this.theme.primary)
-          .fontColor(this.theme.textOnPrimary)
-          .borderRadius(26)
-          .stateStyles({
-            pressed: resultButtonPressedStyle,
-            normal: resultButtonNormalStyle
-          })
-          .onClick(() => {
-            this.navTimerId1 = setTimeout(() => {
-              this.navTimerId1 = -1;
-              try {
-                this.pageStack.clear();
-                this.pageStack.pushPath({ name: 'TypeSelect' });
-              } catch (e) {
-                hilog.error(0x0000, 'ResultPage', 'clear and push failed: %{public}s', JSON.stringify(e));
+        if (!this.isEmptyQuiz) {
+          Button('再玩一次')
+            .layoutWeight(1)
+            .height(52)
+            .fontSize(17)
+            .fontWeight(FontWeight.Bold)
+            .backgroundColor(this.theme.primary)
+            .fontColor(this.theme.textOnPrimary)
+            .borderRadius(26)
+            .stateStyles({
+              pressed: resultButtonPressedStyle,
+              normal: resultButtonNormalStyle
+            })
+            .onClick(() => {
+              // 再玩一次与返回首页使用不同定时器 id，互不干扰；同按钮快速点击时也清理上一次
+              if (this.navTimerId2 !== -1) {
+                clearTimeout(this.navTimerId2);
+                this.navTimerId2 = -1;
               }
-            }, 100);
-          })
+              this.navTimerId2 = setTimeout(() => {
+                this.navTimerId2 = -1;
+                try {
+                  // 用 replacePathByName 替换当前 ResultPage 为 DifficultySelect，
+                  // 避免 clear+push 造成首页瞬间露出闪烁
+                  this.pageStack.replacePathByName('DifficultySelect', { topic: this.topic } as DifficultySelectParams);
+                } catch (e) {
+                  hilog.error(0x0001, 'ResultPage', 'replace to DifficultySelect failed: %{public}s', JSON.stringify(e));
+                }
+              }, 100);
+            })
+        }
       }
       .width('100%')
       .padding(20)

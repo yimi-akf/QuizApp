@@ -29,7 +29,7 @@ export class HistoryStorage {
     try {
       return dataPreferences.getPreferencesSync(context, { name: PREFERENCES_NAME });
     } catch (e) {
-      hilog.error(0x0000, 'HistoryStorage', 'getPreferences failed');
+      hilog.error(0x0001, 'HistoryStorage', 'getPreferences failed');
       return null;
     }
   }
@@ -56,7 +56,7 @@ export class HistoryStorage {
       prefs.putSync(KEY_RECORDS, JSON.stringify(records));
       prefs.flushSync();
     } catch (e) {
-      hilog.error(0x0000, 'HistoryStorage', 'saveRecord failed');
+      hilog.error(0x0001, 'HistoryStorage', 'saveRecord failed');
     }
   }
 
@@ -77,7 +77,7 @@ export class HistoryStorage {
       }
       return parsed;
     } catch (e) {
-      hilog.error(0x0000, 'HistoryStorage', 'loadRecords failed');
+      hilog.error(0x0001, 'HistoryStorage', 'loadRecords failed');
       return [];
     }
   }
@@ -92,7 +92,7 @@ export class HistoryStorage {
       prefs.deleteSync(KEY_RECORDS);
       prefs.flushSync();
     } catch (e) {
-      hilog.error(0x0000, 'HistoryStorage', 'clearRecords failed');
+      hilog.error(0x0001, 'HistoryStorage', 'clearRecords failed');
     }
   }
 
@@ -106,7 +106,7 @@ export class HistoryStorage {
       prefs.clearSync();
       prefs.flushSync();
     } catch (e) {
-      hilog.error(0x0000, 'HistoryStorage', 'clearAll failed');
+      hilog.error(0x0001, 'HistoryStorage', 'clearAll failed');
     }
   }
 }

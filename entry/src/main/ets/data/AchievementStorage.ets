@@ -41,7 +41,7 @@ export class AchievementStorage {
     try {
       return dataPreferences.getPreferencesSync(context, { name: PREFERENCES_NAME });
     } catch (e) {
-      hilog.error(0x0000, 'AchievementStorage', 'getPreferences failed');
+      hilog.error(0x0001, 'AchievementStorage', 'getPreferences failed');
       return null;
     }
   }
@@ -66,7 +66,7 @@ export class AchievementStorage {
         lastAnswerDate: parsed.lastAnswerDate ?? defaults.lastAnswerDate
       };
     } catch (e) {
-      hilog.error(0x0000, 'AchievementStorage', 'loadUserStats failed');
+      hilog.error(0x0001, 'AchievementStorage', 'loadUserStats failed');
       return AchievementStorage.defaultUserStats();
     }
   }
@@ -89,7 +89,7 @@ export class AchievementStorage {
       prefs.putSync(KEY_USER_STATS, JSON.stringify(stats));
       prefs.flushSync();
     } catch (e) {
-      hilog.error(0x0000, 'AchievementStorage', 'saveUserStats failed');
+      hilog.error(0x0001, 'AchievementStorage', 'saveUserStats failed');
     }
   }
 
@@ -108,7 +108,8 @@ export class AchievementStorage {
     return result;
   }
 
-  // 读取成就列表
+  // 读取成就列表（按 id 合并：旧成就保留 unlockedAt，新成就补齐默认未解锁）
+  // 升级新增成就时不会丢失旧用户的解锁记录
   static loadAchievements(context: common.UIAbilityContext): Achievement[] {
     const prefs = AchievementStorage.getPreferences(context);
     if (!prefs) {
@@ -120,12 +121,27 @@ export class AchievementStorage {
         return AchievementStorage.cloneDefaultAchievements();
       }
       const parsed = JSON.parse(value) as Achievement[];
-      if (!Array.isArray(parsed) || parsed.length !== DEFAULT_ACHIEVEMENTS.length) {
+      if (!Array.isArray(parsed) || parsed.length === 0) {
         return AchievementStorage.cloneDefaultAchievements();
       }
-      return parsed;
+      // 按 id 合并：以默认成就列表为骨架，旧记录有则保留 unlockedAt
+      const merged = AchievementStorage.cloneDefaultAchievements();
+      const oldMap = new Map<string, Achievement>();
+      for (let i = 0; i < parsed.length; i++) {
+        const a = parsed[i];
+        if (a && a.id) {
+          oldMap.set(a.id, a);
+        }
+      }
+      for (let i = 0; i < merged.length; i++) {
+        const old = oldMap.get(merged[i].id);
+        if (old && old.unlockedAt) {
+          merged[i].unlockedAt = old.unlockedAt;
+        }
+      }
+      return merged;
     } catch (e) {
-      hilog.error(0x0000, 'AchievementStorage', 'loadAchievements failed');
+      hilog.error(0x0001, 'AchievementStorage', 'loadAchievements failed');
       return AchievementStorage.cloneDefaultAchievements();
     }
   }
@@ -139,7 +155,7 @@ export class AchievementStorage {
       prefs.putSync(KEY_ACHIEVEMENTS, JSON.stringify(achievements));
       prefs.flushSync();
     } catch (e) {
-      hilog.error(0x0000, 'AchievementStorage', 'saveAchievements failed');
+      hilog.error(0x0001, 'AchievementStorage', 'saveAchievements failed');
     }
   }
 
@@ -153,32 +169,14 @@ export class AchievementStorage {
     }
   }
 
-  // 检查并更新连续打卡天数
-  static updateStreak(context: common.UIAbilityContext): void {
-    const stats = AchievementStorage.loadUserStats(context);
-    const today = todayString();
-    if (stats.lastAnswerDate === today) {
-      return;
-    }
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = formatDate(yesterday);
-    if (stats.lastAnswerDate === yesterdayStr) {
-      stats.streakDays++;
-    } else {
-      stats.streakDays = 1;
-    }
-    stats.lastAnswerDate = today;
-    AchievementStorage.saveUserStats(context, stats);
-  }
-
   // 记录一次答题结果（优化：合并 I/O，从 16 次全量读写降为 4 次）
   static recordQuizResult(
     context: common.UIAbilityContext,
     correctCount: number,
     wrongCount: number,
     score: number,
-    maxStreakInQuiz: number
+    maxStreakInQuiz: number,
+    totalQuestions: number = 0
   ): void {
     // 1. 单次加载用户统计
     const stats = AchievementStorage.loadUserStats(context);
@@ -215,7 +213,7 @@ export class AchievementStorage {
     if (correctCount + wrongCount > 0) {
       tryUnlock('first_quiz');
     }
-    if (score === 100) {
+    if (totalQuestions > 0 && correctCount === totalQuestions) {
       tryUnlock('perfect_100');
     }
     if (maxStreakInQuiz >= 10) {
@@ -238,11 +236,11 @@ export class AchievementStorage {
 
   // 记录主题通关
   static recordTopicMastery(context: common.UIAbilityContext, topic: Topic): void {
-    if (topic === 'knowledge') {
+    if (topic === Topic.KNOWLEDGE) {
       AchievementStorage.unlockAchievement(context, 'master_knowledge');
-    } else if (topic === 'reasoning') {
+    } else if (topic === Topic.REASONING) {
       AchievementStorage.unlockAchievement(context, 'master_reasoning');
-    } else if (topic === 'riddle') {
+    } else if (topic === Topic.RIDDLE) {
       AchievementStorage.unlockAchievement(context, 'master_riddle');
     }
   }
@@ -257,7 +255,7 @@ export class AchievementStorage {
       prefs.clearSync();
       prefs.flushSync();
     } catch (e) {
-      hilog.error(0x0000, 'AchievementStorage', 'clearAll failed');
+      hilog.error(0x0001, 'AchievementStorage', 'clearAll failed');
     }
   }
 }

@@ -21,3 +21,59 @@
 -enable-toplevel-obfuscation
 -enable-filename-obfuscation
 -enable-export-obfuscation
+
+# 保留通过 JSON.stringify/JSON.parse 序列化的接口属性名，防止反序列化时属性名不匹配
+-keep-property-name
+  # HistoryRecord
+  id
+  topic
+  difficulty
+  score
+  correctCount
+  total
+  answeredCount
+  elapsedSeconds
+  date
+  # ProgressInfo
+  currentIndex
+  questionIds
+  userAnswers
+  selfAssessments
+  viewedAnswers
+  # LastProgressSummary (currentIndex/total/topic/difficulty 已包含)
+  # TopicProgress
+  entryCompleted
+  advancedCompleted
+  challengeCompleted
+  # DailyStat
+  correct
+  # QuizStats
+  totalQuizzes
+  totalQuestions
+  totalAnswered
+  totalCorrect
+  averageScore
+  bestScore
+  totalTimeSeconds
+  topicProgress
+  dailyStats
+  # FavoriteRecord
+  questionId
+  addedAt
+  groupId
+  # FavoriteGroup
+  name
+  createdAt
+  # UserStats
+  streakDays
+  lastAnswerDate
+  # Achievement
+  title
+  desc
+  icon
+  unlockedAt
+  # WrongRecord
+  wrongCount
+  lastWrongAt
+  mastered
+  correctStreak

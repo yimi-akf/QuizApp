@@ -14,7 +14,6 @@ const PREF_CONFIGS: { name: string; key: string }[] = [
   { name: 'quiz_progress', key: 'progress_data' },
   { name: 'quiz_progress', key: 'last_progress' },
   { name: 'quiz_progress', key: 'last_home_module' },
-  { name: 'quiz_app_settings', key: 'privacy_agreed' },
   { name: 'quiz_wrong_book', key: 'wrong_records' },
   { name: 'quiz_achievement', key: 'user_stats' },
   { name: 'quiz_achievement', key: 'achievements' },
@@ -26,7 +25,7 @@ const PREF_CONFIGS: { name: string; key: string }[] = [
 
 // 合法的 preferences 名称白名单，用于恢复时校验，防止外部备份注入未知键
 const VALID_PREF_NAMES = new Set<string>([
-  'quiz_history', 'quiz_progress', 'quiz_app_settings', 'quiz_wrong_book',
+  'quiz_history', 'quiz_progress', 'quiz_wrong_book',
   'quiz_achievement', 'quiz_favorite', 'quiz_feedback', 'quiz_stats', 'quiz_theme'
 ]);
 
@@ -52,7 +51,7 @@ export class DataBackupManager {
       }
       return true;
     } catch (e) {
-      hilog.error(0x0000, 'DataBackupManager', 'ensureBackupDir failed');
+      hilog.error(0x0001, 'DataBackupManager', 'ensureBackupDir failed');
       return false;
     }
   }
@@ -111,7 +110,7 @@ export class DataBackupManager {
       DataBackupManager.cleanupOldBackups(context);
       return filePath;
     } catch (e) {
-      hilog.error(0x0000, 'DataBackupManager', 'exportBackup failed');
+      hilog.error(0x0001, 'DataBackupManager', 'exportBackup failed');
       return null;
     }
   }
@@ -125,7 +124,7 @@ export class DataBackupManager {
         toDelete.forEach(b => DataBackupManager.deleteBackup(b.filePath));
       }
     } catch (e) {
-      hilog.error(0x0000, 'DataBackupManager', 'cleanupOldBackups failed');
+      hilog.error(0x0001, 'DataBackupManager', 'cleanupOldBackups failed');
     }
   }
 
@@ -156,7 +155,7 @@ export class DataBackupManager {
       });
       return backups.sort((a, b) => b.createTime.localeCompare(a.createTime));
     } catch (e) {
-      hilog.error(0x0000, 'DataBackupManager', 'listBackups failed');
+      hilog.error(0x0001, 'DataBackupManager', 'listBackups failed');
       return [];
     }
   }
@@ -266,7 +265,7 @@ export class DataBackupManager {
       fs.unlinkSync(filePath);
       return true;
     } catch (e) {
-      hilog.error(0x0000, 'DataBackupManager', 'deleteBackup failed');
+      hilog.error(0x0001, 'DataBackupManager', 'deleteBackup failed');
       return false;
     }
   }
@@ -279,7 +278,7 @@ export class DataBackupManager {
         DataBackupManager.deleteBackup(b.filePath);
       });
     } catch (e) {
-      hilog.error(0x0000, 'DataBackupManager', 'clearAllBackups failed');
+      hilog.error(0x0001, 'DataBackupManager', 'clearAllBackups failed');
     }
   }
 }

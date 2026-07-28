@@ -2,7 +2,7 @@ import common from '@ohos.app.ability.common';
 import { HistoryRecord, HistoryStorage } from '../data/HistoryStorage';
 import { AppTheme, THEMES } from '../model/AppTheme';
 import { ThemeManager } from '../data/ThemeManager';
-import { topicLabel, difficultyLabel, formatTime, difficultyColor } from '../utils/FormatUtil';
+import { topicLabel, difficultyLabel, formatTime, difficultyColor, difficultyTagBgColor } from '../utils/FormatUtil';
 import { popSafe } from '../utils/NavUtil';
 
 // 答题历史页：展示历史答题记录列表
@@ -48,6 +48,15 @@ export struct HistoryPage {
     HistoryStorage.clearRecords(context)
     this.records = []
     this.showClearDialog = false
+  }
+
+  // 系统返回键拦截：弹窗打开时优先关闭弹窗，而非退出页面
+  onBackPress(): boolean {
+    if (this.showClearDialog) {
+      this.showClearDialog = false
+      return true
+    }
+    return false
   }
 
   build() {
@@ -130,7 +139,7 @@ export struct HistoryPage {
               .fontColor(this.theme.textSecondary)
               .margin({ bottom: 8 })
 
-            Text('完成一局答题后，历史记录会显示在这里')
+            Text('完成一整局答题（答完所有题目并查看结果）后，\n本次成绩会自动记录到这里')
               .fontSize(14)
               .fontColor(this.theme.textSecondary)
               .textAlign(TextAlign.Center)
@@ -278,10 +287,11 @@ export struct HistoryPage {
 
           Text(difficultyLabel(record.difficulty))
             .fontSize(12)
+            .fontWeight(FontWeight.Medium)
             .fontColor(difficultyColor(this.theme, record.difficulty))
-            .padding({ left: 8, right: 8, top: 2, bottom: 2 })
-            .backgroundColor(`${difficultyColor(this.theme, record.difficulty)}14`)
-            .borderRadius(8)
+            .padding({ left: 10, right: 10, top: 3, bottom: 3 })
+            .backgroundColor(difficultyTagBgColor(record.difficulty))
+            .borderRadius(10)
         }
         .width('100%')
         .margin({ bottom: 8 })

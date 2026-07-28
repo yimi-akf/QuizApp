@@ -13,7 +13,7 @@ export class ThemeManager {
     try {
       return dataPreferences.getPreferencesSync(context, { name: PREFERENCES_NAME });
     } catch (e) {
-      hilog.error(0x0000, 'ThemeManager', 'getPreferences failed');
+      hilog.error(0x0001, 'ThemeManager', 'getPreferences failed');
       return null;
     }
   }
@@ -31,7 +31,7 @@ export class ThemeManager {
       }
       return THEMES[DEFAULT_THEME_INDEX];
     } catch (e) {
-      hilog.error(0x0000, 'ThemeManager', 'getCurrentTheme failed');
+      hilog.error(0x0001, 'ThemeManager', 'getCurrentTheme failed');
       return THEMES[DEFAULT_THEME_INDEX];
     }
   }
@@ -49,7 +49,7 @@ export class ThemeManager {
         AppStorage.setOrCreate(APP_STORAGE_THEME_KEY, index);
       }
     } catch (e) {
-      hilog.error(0x0000, 'ThemeManager', 'setThemeIndex failed');
+      hilog.error(0x0001, 'ThemeManager', 'setThemeIndex failed');
     }
   }
 
@@ -72,7 +72,7 @@ export class ThemeManager {
       }
       return DEFAULT_THEME_INDEX;
     } catch (e) {
-      hilog.error(0x0000, 'ThemeManager', 'getThemeIndex failed');
+      hilog.error(0x0001, 'ThemeManager', 'getThemeIndex failed');
       return DEFAULT_THEME_INDEX;
     }
   }
@@ -87,7 +87,7 @@ export class ThemeManager {
       prefs.clearSync();
       prefs.flushSync();
     } catch (e) {
-      hilog.error(0x0000, 'ThemeManager', 'clearAll failed');
+      hilog.error(0x0001, 'ThemeManager', 'clearAll failed');
     }
   }
 }

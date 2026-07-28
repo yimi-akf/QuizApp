@@ -12,13 +12,13 @@
       "name": "release",
       "arkOptions": {
         "obfuscation": {
-          "ruleOptions": {
-            "enable": false,
-            "files": [
-              "./obfuscation-rules.txt"
-            ]
+            "ruleOptions": {
+              "enable": true,
+              "files": [
+                "./obfuscation-rules.txt"
+              ]
+            }
           }
-        }
       }
     },
   ],

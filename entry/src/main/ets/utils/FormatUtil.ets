@@ -36,7 +36,18 @@ export function difficultyColor(theme: AppTheme, difficulty: Difficulty | 'mixed
     case Difficulty.ENTRY: return theme.success;
     case Difficulty.ADVANCED: return theme.warning;
     case Difficulty.CHALLENGE: return theme.error;
+    case 'mixed': return '#9C27B0';
     default: return theme.primary;
+  }
+}
+
+export function difficultyTagBgColor(difficulty: Difficulty | 'mixed'): string {
+  switch (difficulty) {
+    case Difficulty.ENTRY: return '#E8F5E9';
+    case Difficulty.ADVANCED: return '#FFF3E0';
+    case Difficulty.CHALLENGE: return '#FFEBEE';
+    case 'mixed': return '#F3E5F5';
+    default: return '#F5F5F5';
   }
 }
 

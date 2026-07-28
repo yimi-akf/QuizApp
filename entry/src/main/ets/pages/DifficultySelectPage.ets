@@ -168,6 +168,13 @@ export struct DifficultySelectPage {
         .height(52)
         .fontSize(18)
         .fontWeight(FontWeight.Bold)
+        .opacity(this.btnOpacity)
+        .scale({ x: this.btnScale, y: this.btnScale })
+        .animation({
+          duration: 500,
+          curve: Curve.EaseOut,
+          delay: 300
+        })
         .backgroundColor(this.selectedDifficulty ? this.theme.primary : this.theme.divider)
         .fontColor(this.theme.textOnPrimary)
         .borderRadius(26)
@@ -176,13 +183,6 @@ export struct DifficultySelectPage {
         .stateStyles({
           pressed: { .scale({ x: 0.97, y: 0.97 }) },
           normal: { .scale({ x: 1, y: 1 }) }
-        })
-        .opacity(this.btnOpacity)
-        .scale({ x: this.btnScale, y: this.btnScale })
-        .animation({
-          duration: 500,
-          curve: Curve.EaseOut,
-          delay: 300
         })
         .onClick(() => {
           if (this.selectedDifficulty) {

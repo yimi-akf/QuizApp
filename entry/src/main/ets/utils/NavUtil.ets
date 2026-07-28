@@ -5,6 +5,6 @@ export function popSafe(pageStack: NavPathStack): void {
   try {
     pageStack.pop();
   } catch (e) {
-    hilog.warn(0x0000, 'NavUtil', 'pop failed: %{public}s', JSON.stringify(e));
+    hilog.warn(0x0001, 'NavUtil', 'pop failed: %{public}s', JSON.stringify(e));
   }
 }

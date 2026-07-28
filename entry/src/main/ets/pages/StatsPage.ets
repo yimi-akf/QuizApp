@@ -6,6 +6,7 @@ import { ThemeManager } from '../data/ThemeManager';
 import { EmptyState } from '../components/EmptyState';
 import { formatTime } from '../utils/FormatUtil';
 import { popSafe } from '../utils/NavUtil';
+import { Topic } from '../model/Question';
 
 // 统计看板页
 @Component
@@ -47,8 +48,8 @@ export struct StatsPage {
   loadData() {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     const records = HistoryStorage.loadRecords(context);
-    const stats = StatsStorage.computeStats(records);
-    stats.topicProgress = StatsStorage.loadTopicProgress(context);
+    const topicProgress = StatsStorage.loadTopicProgress(context);
+    const stats = StatsStorage.computeStats(records, topicProgress);
     this.records = records;
     this.stats = stats;
   }
@@ -119,7 +120,7 @@ export struct StatsPage {
           EmptyState({
             icon: '📊',
             title: '还没有答题记录',
-            subtitle: '去完成一次答题，\n这里会展示你的学习数据',
+            subtitle: '完成一整局答题（答完所有题目并查看结果）后，\n这里会展示你的学习数据',
             theme: this.theme
           })
         } else {
@@ -239,7 +240,7 @@ export struct StatsPage {
   @Builder
   TopicProgressItem(p: TopicProgress) {
     Row() {
-      Text(p.topic === 'knowledge' ? '知识型问答' : p.topic === 'reasoning' ? '推理型问答' : '脑筋急转弯')
+      Text(p.topic === Topic.KNOWLEDGE ? '知识型问答' : p.topic === Topic.REASONING ? '推理型问答' : '脑筋急转弯')
         .fontSize(15)
         .fontColor(this.theme.textPrimary)
         .layoutWeight(1)

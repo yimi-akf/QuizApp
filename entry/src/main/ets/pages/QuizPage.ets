@@ -1,5 +1,5 @@
 import common from '@ohos.app.ability.common';
-import { questionBank } from '../data/QuestionBank';
+import { questionBank, findQuestionById } from '../data/QuestionBank';
 import { ProgressStorage, ProgressInfo } from '../data/ProgressStorage';
 import { Difficulty, Question, QuestionType, Topic, QuizMode } from '../model/Question';
 import { ResultPageParams } from './ResultPage';
@@ -70,7 +70,7 @@ export struct QuizPage {
   // 答题模式
   @State quizMode: QuizMode = QuizMode.NORMAL;
   // 限时模式剩余秒数
-  @State timeAttackRemaining: number = 60;
+  @State timeAttackRemaining: number = TIME_ATTACK_TOTAL_SECONDS;
   private timeAttackTimerId: number = -1;
   // 限时/闯关模式是否已结束
   @State isSpecialModeFinished: boolean = false;
@@ -106,6 +106,8 @@ export struct QuizPage {
   // 当前题目收藏状态
   @State isFavorite: boolean = false;
   @State isLoading: boolean = true;
+  // 长按收藏触发后短期锁定选项点击，防止松手时误触发 onOptionClick
+  private longPressLockUntil: number = 0;
 
   aboutToAppear() {
     const params = this.param;
@@ -131,7 +133,7 @@ export struct QuizPage {
       // 错题本/收藏等：使用指定题目 ID
       const restored: Question[] = [];
       for (let i = 0; i < providedIds.length; i++) {
-        const q = questionBank.find(item => item.id === providedIds[i]);
+        const q = findQuestionById(providedIds[i]);
         if (q !== undefined) {
           restored.push(q);
         }
@@ -191,7 +193,7 @@ export struct QuizPage {
 
     // 限时模式启动倒计时
     if (this.quizMode === QuizMode.TIME_ATTACK) {
-      this.timeAttackRemaining = 60;
+      this.timeAttackRemaining = TIME_ATTACK_TOTAL_SECONDS;
       this.startTimeAttackTimer();
     }
 
@@ -212,27 +214,27 @@ export struct QuizPage {
     const q = this.currentQuestion();
     if (!context || q.id <= 0) {
       this.isFavorite = false;
-      hilog.warn(0x0000, 'QuizPage', `loadFavoriteState skipped, context=${!!context}, id=${q.id}`);
+      hilog.warn(0x0001, 'QuizPage', `loadFavoriteState skipped, context=${!!context}, id=${q.id}`);
       return;
     }
     this.isFavorite = FavoriteStorage.isFavorite(context, q.id);
-    hilog.info(0x0000, 'QuizPage', `loadFavoriteState id=${q.id}, favorite=${this.isFavorite}`);
+    hilog.info(0x0001, 'QuizPage', `loadFavoriteState id=${q.id}, favorite=${this.isFavorite}`);
   }
 
   // 切换当前题目收藏状态
   toggleFavorite() {
     const q = this.currentQuestion();
     if (q.id <= 0) {
-      hilog.warn(0x0000, 'QuizPage', `toggleFavorite skipped, invalid id=${q.id}`);
+      hilog.warn(0x0001, 'QuizPage', `toggleFavorite skipped, invalid id=${q.id}`);
       return;
     }
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     if (!context) {
-      hilog.error(0x0000, 'QuizPage', 'toggleFavorite failed: context is null');
+      hilog.error(0x0001, 'QuizPage', 'toggleFavorite failed: context is null');
       return;
     }
     this.isFavorite = FavoriteStorage.toggleFavorite(context, q.id);
-    hilog.info(0x0000, 'QuizPage', `toggleFavorite id=${q.id}, favorite=${this.isFavorite}`);
+    hilog.info(0x0001, 'QuizPage', `toggleFavorite id=${q.id}, favorite=${this.isFavorite}`);
   }
 
   // 启动计时器
@@ -293,7 +295,7 @@ export struct QuizPage {
         } as ResultPageParams
       });
     } catch (e) {
-      hilog.error(0x0000, 'QuizPage', 'navigate to Result failed: %{public}s', JSON.stringify(e));
+      hilog.error(0x0001, 'QuizPage', 'navigate to Result failed: %{public}s', JSON.stringify(e));
     }
   }
 
@@ -310,9 +312,19 @@ export struct QuizPage {
     return this.theme.primary;
   }
 
+  timerBgColor(): string {
+    if (this.quizMode === QuizMode.TIME_ATTACK && this.timeAttackRemaining <= 10) {
+      return this.theme.timerWarningBg;
+    }
+    return this.theme.timerBg;
+  }
+
   // 当前题目自评结果
   selfAssessment(): 'pending' | 'correct' | 'wrong' {
-    return this.selfAssessments[this.currentIndex];
+    if (this.currentIndex < 0 || this.currentIndex >= this.selfAssessments.length) {
+      return 'pending';
+    }
+    return this.selfAssessments[this.currentIndex] ?? 'pending';
   }
 
   // 当前题目自评反馈颜色
@@ -333,6 +345,8 @@ export struct QuizPage {
     this.stopTimer();
     this.stopTimeAttackTimer();
     this.clearAnimationTimers();
+    // 通知主页刷新"继续上次进度"卡片（Tab 未切换时 onWillShow 不触发）
+    AppStorage.setOrCreate('homeTabShowTrigger', Date.now());
   }
 
   // 清理题目切换与自动下一题的 setTimeout，避免回调已销毁组件
@@ -345,6 +359,18 @@ export struct QuizPage {
       clearTimeout(this.autoNextTimerId);
       this.autoNextTimerId = -1;
     }
+  }
+
+  // 调度限时模式自动下一题：先清理旧 timer 再设置新 timer，防止并发覆盖导致悬挂回调
+  private scheduleAutoNext(delay: number) {
+    if (this.autoNextTimerId !== -1) {
+      clearTimeout(this.autoNextTimerId);
+      this.autoNextTimerId = -1;
+    }
+    this.autoNextTimerId = setTimeout((): void => {
+      this.autoNextTimerId = -1;
+      this.autoNext();
+    }, delay);
   }
 
   // 校验恢复后的进度数据，防止题库变化导致数组越界
@@ -403,7 +429,9 @@ export struct QuizPage {
 
   // 获取当前题目
   currentQuestion(): Question {
-    if (this.currentQuestions.length === 0) {
+    if (this.currentQuestions.length === 0
+      || this.currentIndex < 0
+      || this.currentIndex >= this.currentQuestions.length) {
       return EMPTY_QUESTION;
     }
     return this.currentQuestions[this.currentIndex];
@@ -412,6 +440,10 @@ export struct QuizPage {
   // 点击选项
   onOptionClick(optionIndex: number) {
     if (this.hasAnswered || this.currentQuestions.length === 0) {
+      return;
+    }
+    // 长按收藏触发后短期锁定，防止松手时误触发选项点击
+    if (this.longPressLockUntil > 0 && Date.now() < this.longPressLockUntil) {
       return;
     }
     // 用新数组替换触发 @State 刷新，避免直接修改数组元素不刷新
@@ -448,6 +480,10 @@ export struct QuizPage {
     this.feedbackScale = 1;
     this.recordAnswerResult(true);
     this.persistProgress();
+    // 限时模式自评后自动跳下一题
+    if (this.quizMode === QuizMode.TIME_ATTACK) {
+      this.scheduleAutoNext(800);
+    }
   }
 
   // 简答题自评：答错
@@ -462,6 +498,10 @@ export struct QuizPage {
     this.feedbackScale = 1;
     this.recordAnswerResult(false);
     this.persistProgress();
+    // 限时模式自评后自动跳下一题
+    if (this.quizMode === QuizMode.TIME_ATTACK) {
+      this.scheduleAutoNext(800);
+    }
   }
 
   // 记录答题结果（错题本、闯关、限时、练习）
@@ -471,8 +511,8 @@ export struct QuizPage {
     }
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     const q = this.currentQuestion();
-    // 普通模式答错：加入错题本
-    if (this.quizMode === QuizMode.NORMAL && !isCorrect) {
+    // 普通模式、闯关模式、限时模式答错：加入错题本
+    if ((this.quizMode === QuizMode.NORMAL || this.quizMode === QuizMode.CHALLENGE || this.quizMode === QuizMode.TIME_ATTACK) && !isCorrect) {
       WrongBookStorage.addWrong(context, q.id);
     }
     // 错题本模式答对：累计连续答对次数
@@ -488,13 +528,11 @@ export struct QuizPage {
       this.finishChallenge();
       return;
     }
-    // 限时模式答对自动进入下一题（简答题需完成自评）
-    if (this.quizMode === QuizMode.TIME_ATTACK && isCorrect) {
+    // 限时模式：答对自动进入下一题（简答题在自评方法中处理），答错也自动跳过
+    if (this.quizMode === QuizMode.TIME_ATTACK) {
       if (q.type !== QuestionType.SHORT_ANSWER) {
-        this.autoNextTimerId = setTimeout((): void => {
-          this.autoNextTimerId = -1;
-          this.autoNext();
-        }, 600);
+        const delay = isCorrect ? 600 : 1000;
+        this.scheduleAutoNext(delay);
       }
     }
   }
@@ -521,7 +559,7 @@ export struct QuizPage {
         } as ResultPageParams
       });
     } catch (e) {
-      hilog.error(0x0000, 'QuizPage', 'navigate to Result failed: %{public}s', JSON.stringify(e));
+      hilog.error(0x0001, 'QuizPage', 'navigate to Result failed: %{public}s', JSON.stringify(e));
     }
   }
 
@@ -614,13 +652,31 @@ export struct QuizPage {
 
   // 下一题或查看结果
   onNext() {
+    // 限时/闯关模式已结束时不再跳转，防止重复弹出结果页
+    if (this.isSpecialModeFinished) {
+      return;
+    }
     if (this.currentQuestions.length === 0) {
-      // 空题库时不进入结果页，直接返回首页
+      // 空题库：跳转结果页显示"暂无题目"提示，而非无声息地返回首页
       this.stopTimer();
+      this.stopTimeAttackTimer();
+      this.clearAnimationTimers();
       try {
-        this.pageStack.clear();
+        this.pageStack.pushPath({
+          name: 'Result',
+          param: {
+            topic: this.selectedTopic,
+            difficulty: this.selectedDifficulty,
+            answers: [],
+            questionIds: [],
+            selfAssessments: [],
+            elapsedSeconds: this.elapsedSeconds,
+            mode: this.quizMode,
+            isEmptyQuiz: true
+          } as ResultPageParams
+        });
       } catch (e) {
-        hilog.error(0x0000, 'QuizPage', 'clear stack failed: %{public}s', JSON.stringify(e));
+        hilog.error(0x0001, 'QuizPage', 'navigate to Result (empty) failed: %{public}s', JSON.stringify(e));
       }
       return;
     }
@@ -628,6 +684,12 @@ export struct QuizPage {
       this.changeQuestion(this.currentIndex + 1, 1);
     } else {
       // 答题完成，停止计时并清除本局进度
+      // 标记限时/闯关模式已结束，防止挂起的 autoNext 定时器再次触发 finishTimeAttack 导致结果页重复弹出
+      if (this.quizMode === QuizMode.TIME_ATTACK || this.quizMode === QuizMode.CHALLENGE) {
+        this.isSpecialModeFinished = true;
+      }
+      // 清理可能挂起的 autoNext / 题目切换定时器，避免回调已导航的页面
+      this.clearAnimationTimers();
       this.stopTimer();
       this.stopTimeAttackTimer();
       const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
@@ -650,7 +712,7 @@ export struct QuizPage {
           } as ResultPageParams
         });
       } catch (e) {
-        hilog.error(0x0000, 'QuizPage', 'navigate to Result failed: %{public}s', JSON.stringify(e));
+        hilog.error(0x0001, 'QuizPage', 'navigate to Result failed: %{public}s', JSON.stringify(e));
       }
     }
   }
@@ -703,7 +765,8 @@ export struct QuizPage {
       .gesture(
         SwipeGesture({ speed: 0.3, direction: SwipeDirection.Horizontal })
           .onAction((event: GestureEvent) => {
-            if (event.angle < 0) {
+            // angle 与水平正方向夹角，左滑约±180°，右滑约0°
+            if (Math.abs(event.angle) > 90) {
               // 向左滑 → 下一题
               if (this.canGoNext()) {
                 this.onNext();
@@ -758,9 +821,9 @@ export struct QuizPage {
             .fontSize(12)
             .fontColor(this.timeAttackColor())
             .fontWeight(FontWeight.Medium)
-            .backgroundColor(`${this.timeAttackColor()}1A`)
-            .padding({ left: 8, right: 8, top: 3, bottom: 3 })
-            .borderRadius(8)
+            .backgroundColor(this.timerBgColor())
+            .padding({ left: 10, right: 10, top: 4, bottom: 4 })
+            .borderRadius(10)
         }
       }
       .width('100%')
@@ -848,8 +911,10 @@ export struct QuizPage {
     .gesture(
       LongPressGesture({ duration: 500 })
         .onAction(() => {
-          hilog.info(0x0000, 'QuizPage', 'long press toggle favorite');
+          hilog.info(0x0001, 'QuizPage', 'long press toggle favorite');
           this.toggleFavorite();
+          // 长按触发后锁定 400ms，防止松手时误触发选项 onClick
+          this.longPressLockUntil = Date.now() + 400;
         })
     )
   }
@@ -861,7 +926,7 @@ export struct QuizPage {
         Text('解析')
           .fontSize(15)
           .fontWeight(FontWeight.Bold)
-          .fontColor(this.theme.primary)
+          .fontColor(this.theme.success)
       }
       .width('100%')
       .margin({ bottom: 8 })
@@ -874,9 +939,8 @@ export struct QuizPage {
     }
     .width('100%')
     .padding(16)
-    .backgroundColor(this.theme.optionDefaultBg)
-    .border({ width: 1, color: this.theme.divider })
-    .borderRadius(12)
+    .backgroundColor(this.theme.answerBg)
+    .borderRadius(20)
     .margin({ top: 12 })
   }
 
@@ -912,8 +976,8 @@ export struct QuizPage {
         }
         .width('100%')
         .padding(16)
-        .backgroundColor(`${this.theme.success}14`)
-        .borderRadius(12)
+        .backgroundColor(this.theme.answerBg)
+        .borderRadius(20)
         .opacity(this.answerCardOpacity)
         .animation({
           duration: 400,
@@ -959,8 +1023,8 @@ export struct QuizPage {
           }
           .width('100%')
           .padding(16)
-          .backgroundColor(`${this.selfAssessmentColor()}14`)
-          .borderRadius(12)
+          .backgroundColor(this.selfAssessment() === 'correct' ? this.theme.feedbackCorrectBg : this.theme.feedbackWrongBg)
+          .borderRadius(20)
           .margin({ top: 16 })
           .opacity(this.feedbackOpacity)
           .scale({ x: this.feedbackScale, y: this.feedbackScale })
@@ -986,6 +1050,10 @@ export struct QuizPage {
         .backgroundColor(this.OptionCircleColor(index))
         .borderRadius(16)
         .textAlign(TextAlign.Center)
+        .border({
+          width: this.OptionCircleBorderWidth(index),
+          color: this.OptionCircleBorderColor(index)
+        })
 
       Text(option)
         .fontSize(17)
@@ -1011,6 +1079,10 @@ export struct QuizPage {
     .padding(16)
     .backgroundColor(this.OptionBgColor(index))
     .borderRadius(12)
+    .border({
+      width: this.OptionBorderWidth(index),
+      color: this.OptionBorderColor(index)
+    })
     .margin({ bottom: 12 })
     .stateStyles({
       pressed: optionPressedStyle,
@@ -1030,6 +1102,46 @@ export struct QuizPage {
       return this.theme.optionWrongBg;
     }
     return this.theme.optionDefaultBg;
+  }
+
+  OptionBorderWidth(index: number): number {
+    if (!this.hasAnswered) {
+      return 1;
+    }
+    if (index === this.currentQuestion().correctIndex) {
+      return 1.5;
+    }
+    if (index === this.userAnswers[this.currentIndex]) {
+      return 1.5;
+    }
+    return 1;
+  }
+
+  OptionBorderColor(index: number): string {
+    if (!this.hasAnswered) {
+      return this.theme.divider;
+    }
+    if (index === this.currentQuestion().correctIndex) {
+      return this.theme.success;
+    }
+    if (index === this.userAnswers[this.currentIndex]) {
+      return this.theme.error;
+    }
+    return this.theme.divider;
+  }
+
+  OptionCircleBorderWidth(index: number): number {
+    if (!this.hasAnswered) {
+      return 1.5;
+    }
+    return 0;
+  }
+
+  OptionCircleBorderColor(index: number): string {
+    if (!this.hasAnswered) {
+      return this.theme.primary;
+    }
+    return 'rgba(0,0,0,0)';
   }
 
   OptionLabelColor(index: number): string {
@@ -1060,7 +1172,7 @@ export struct QuizPage {
 
   OptionCircleColor(index: number): string {
     if (!this.hasAnswered) {
-      return `${this.theme.primary}1A`;
+      return '#FFFFFF';
     }
     if (index === this.currentQuestion().correctIndex) {
       return this.theme.success;
@@ -1068,7 +1180,7 @@ export struct QuizPage {
     if (index === this.userAnswers[this.currentIndex]) {
       return this.theme.error;
     }
-    return `${this.theme.primary}1A`;
+    return '#FFFFFF';
   }
 
   OptionLabel(index: number): string {

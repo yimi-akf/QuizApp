@@ -19,7 +19,7 @@ export class WrongBookStorage {
     try {
       return dataPreferences.getPreferencesSync(context, { name: PREFERENCES_NAME });
     } catch (e) {
-      hilog.error(0x0000, 'WrongBookStorage', 'getPreferences failed');
+      hilog.error(0x0001, 'WrongBookStorage', 'getPreferences failed');
       return null;
     }
   }
@@ -41,7 +41,7 @@ export class WrongBookStorage {
       }
       return parsed;
     } catch (e) {
-      hilog.error(0x0000, 'WrongBookStorage', 'loadRecords failed');
+      hilog.error(0x0001, 'WrongBookStorage', 'loadRecords failed');
       return [];
     }
   }
@@ -56,7 +56,7 @@ export class WrongBookStorage {
       prefs.putSync(KEY_WRONG_RECORDS, JSON.stringify(records));
       prefs.flushSync();
     } catch (e) {
-      hilog.error(0x0000, 'WrongBookStorage', 'saveRecords failed');
+      hilog.error(0x0001, 'WrongBookStorage', 'saveRecords failed');
     }
   }
 
@@ -119,7 +119,7 @@ export class WrongBookStorage {
       prefs.clearSync();
       prefs.flushSync();
     } catch (e) {
-      hilog.error(0x0000, 'WrongBookStorage', 'clearAll failed');
+      hilog.error(0x0001, 'WrongBookStorage', 'clearAll failed');
     }
   }
 }

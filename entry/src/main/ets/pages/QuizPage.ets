@@ -598,6 +598,10 @@ export struct QuizPage {
     if (this.currentQuestions.length === 0 || this.quizMode !== QuizMode.NORMAL) {
       return;
     }
+    // 收藏练习通过 questionIds 传入题目，与普通模式存档键相同，跳过持久化避免覆盖普通模式进度
+    if (this.param.questionIds && this.param.questionIds.length > 0) {
+      return;
+    }
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     ProgressStorage.saveProgress(context, {
       topic: this.selectedTopic,
@@ -693,7 +697,7 @@ export struct QuizPage {
       this.stopTimer();
       this.stopTimeAttackTimer();
       const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
-      if (this.quizMode === QuizMode.NORMAL) {
+      if (this.quizMode === QuizMode.NORMAL && !(this.param.questionIds && this.param.questionIds.length > 0)) {
         ProgressStorage.clearProgress(context, this.selectedTopic, this.selectedDifficulty);
         // 同时清除首页“继续上次进度”卡片，避免完成后仍显示旧进度
         ProgressStorage.clearLastProgress(context);

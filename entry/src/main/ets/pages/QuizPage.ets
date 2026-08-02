@@ -3,7 +3,7 @@ import { questionBank, findQuestionById } from '../data/QuestionBank';
 import { ProgressStorage, ProgressInfo } from '../data/ProgressStorage';
 import { Difficulty, Question, QuestionType, Topic, QuizMode } from '../model/Question';
 import { ResultPageParams } from './ResultPage';
-import { AppTheme, THEMES } from '../model/AppTheme';
+import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
 import { ThemeManager } from '../data/ThemeManager';
 import { WrongBookStorage } from '../data/WrongBookStorage';
 import { FavoriteStorage } from '../data/FavoriteStorage';
@@ -61,6 +61,8 @@ export interface QuizPageParams {
 export struct QuizPage {
   @Consume('pageStack') pageStack: NavPathStack
   @State theme: AppTheme = THEMES[0];
+  @StorageLink('quizThemeIndex') @Watch('onDarkModeChange') themeIndex: number = 0;
+  @StorageLink('quizDarkMode') @Watch('onDarkModeChange') darkMode: boolean = false;
   public param: QuizPageParams = { topic: Topic.KNOWLEDGE, difficulty: Difficulty.ENTRY }
   // 当前轮次题目
   @State currentQuestions: Question[] = [];
@@ -206,6 +208,10 @@ export struct QuizPage {
     // 初始化收藏状态
     this.loadFavoriteState();
     this.isLoading = false;
+  }
+
+  onDarkModeChange() {
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
   }
 
   // 加载当前题目的收藏状态

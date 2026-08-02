@@ -2,7 +2,7 @@ import common from '@ohos.app.ability.common';
 import { FavoriteStorage, FavoriteRecord } from '../data/FavoriteStorage';
 import { findQuestionById } from '../data/QuestionBank';
 import { ThemeManager } from '../data/ThemeManager';
-import { AppTheme, THEMES } from '../model/AppTheme';
+import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
 import { Question, QuizMode, Topic } from '../model/Question';
 import { QuizPageParams } from './QuizPage';
 import { EmptyState } from '../components/EmptyState';
@@ -36,6 +36,7 @@ class TopicGroupData {
 export struct FavoriteTab {
   @Consume('pageStack') pageStack: NavPathStack
   @StorageLink('quizThemeIndex') @Watch('onThemeIndexChange') themeIndex: number = 0;
+  @StorageLink('quizDarkMode') @Watch('onThemeChange') darkMode: boolean = false;
   @State theme: AppTheme = THEMES[0];
   @State favorites: FavoriteRecord[] = [];
   @State favoriteItems: FavoriteItemData[] = [];
@@ -48,18 +49,22 @@ export struct FavoriteTab {
   aboutToAppear() {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     ThemeManager.syncToAppStorage(context);
-    this.theme = THEMES[this.themeIndex] ?? THEMES[0];
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
     this.loadData(context);
     this.playEntranceAnimation();
   }
 
   onThemeIndexChange() {
-    this.theme = THEMES[this.themeIndex] ?? THEMES[0];
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
+  }
+
+  onThemeChange() {
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
   }
 
   onFavoriteTabShow() {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
-    this.theme = THEMES[this.themeIndex] ?? THEMES[0];
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
     this.loadData(context);
   }
 

@@ -2,7 +2,7 @@ import common from '@ohos.app.ability.common';
 import { findQuestionById } from '../data/QuestionBank';
 import { WrongBookStorage, WrongRecord } from '../data/WrongBookStorage';
 import { Question, Topic, QuizMode } from '../model/Question';
-import { AppTheme, THEMES } from '../model/AppTheme';
+import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
 import { ThemeManager } from '../data/ThemeManager';
 import { EmptyState } from '../components/EmptyState';
 import { typeLabel } from '../utils/FormatUtil';
@@ -13,6 +13,8 @@ import { QuizPageParams } from './QuizPage';
 @Component
 export struct WrongBookPage {
   @Consume('pageStack') pageStack: NavPathStack
+  @StorageLink('quizThemeIndex') @Watch('onThemeChange') themeIndex: number = 0;
+  @StorageLink('quizDarkMode') @Watch('onThemeChange') darkMode: boolean = false;
   @State theme: AppTheme = THEMES[0];
   @State records: WrongRecord[] = [];
   @State unmasteredQuestions: Question[] = [];
@@ -23,13 +25,17 @@ export struct WrongBookPage {
 
   aboutToAppear() {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
-    this.theme = ThemeManager.getCurrentTheme(context);
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
     this.loadData();
 
     this.headerOpacity = 1;
     this.headerOffset = 0;
     this.listOpacity = 1;
     this.listOffset = 0;
+  }
+
+  onThemeChange() {
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
   }
 
   onPageShow() {

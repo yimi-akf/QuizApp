@@ -6,8 +6,9 @@ import { AchievementStorage } from '../data/AchievementStorage';
 import { StatsStorage } from '../data/StatsStorage';
 import { FavoriteStorage } from '../data/FavoriteStorage';
 import { ThemeManager } from '../data/ThemeManager';
-import { AppTheme, THEMES } from '../model/AppTheme';
+import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
 import { PRIVACY_URL, APP_NAME, APP_VERSION, APP_DEVELOPER } from '../data/AppConstants';
+import { Toggle } from '@ohos.arkui.Toggle';
 import hilog from '@ohos.hilog';
 
 // 我的标签内容
@@ -15,6 +16,7 @@ import hilog from '@ohos.hilog';
 export struct MineTab {
   @Consume('pageStack') pageStack: NavPathStack
   @StorageLink('quizThemeIndex') @Watch('onThemeIndexChange') themeIndex: number = 0;
+  @StorageLink('quizDarkMode') @Watch('onThemeIndexChange') darkMode: boolean = false;
   @State theme: AppTheme = THEMES[0];
   @State currentThemeName: string = THEMES[0].name;
   @State headerOpacity: number = 0;
@@ -22,11 +24,13 @@ export struct MineTab {
   @State contentOffset: number = 40;
   @StorageLink('mineTabShowTrigger') @Watch('onMineTabShow') mineTabShowTrigger: number = 0;
 
-  @State showClearDialog: boolean = false
-  @State showClearedDialog: boolean = false
-  @State showAboutDialog: boolean = false
-  @State showAnnouncementDialog: boolean = false
-  @State showThemeDialog: boolean = false
+  @State @Watch('syncDialogFlag') showClearDialog: boolean = false
+  @State @Watch('syncDialogFlag') showClearedDialog: boolean = false
+  @State @Watch('syncDialogFlag') showAboutDialog: boolean = false
+  @State @Watch('syncDialogFlag') showAnnouncementDialog: boolean = false
+  @State @Watch('syncDialogFlag') showThemeDialog: boolean = false
+  // 监听来自 Index.onBackPress 的信号，关闭 MineTab 弹窗
+  @StorageLink('mineTabBackPress') @Watch('onBackPressSignal') mineTabBackPress: number = 0;
 
   aboutToAppear() {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
@@ -34,22 +38,24 @@ export struct MineTab {
     this.theme = THEMES[this.themeIndex] ?? THEMES[0];
     this.currentThemeName = this.theme.name;
     this.playEntranceAnimation();
+    // 初始化返回键拦截信号
+    AppStorage.setOrCreate('mineTabDialogOpen', false);
   }
 
   onPageShow() {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
-    this.theme = THEMES[this.themeIndex] ?? THEMES[0];
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
     this.currentThemeName = this.theme.name;
   }
 
   onThemeIndexChange() {
-    this.theme = THEMES[this.themeIndex] ?? THEMES[0];
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
     this.currentThemeName = this.theme.name;
   }
 
   onMineTabShow() {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
-    this.theme = THEMES[this.themeIndex] ?? THEMES[0];
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
     this.currentThemeName = this.theme.name;
   }
 
@@ -57,6 +63,22 @@ export struct MineTab {
     this.headerOpacity = 1;
     this.contentOpacity = 1;
     this.contentOffset = 0;
+  }
+
+  // 同步弹窗状态到 AppStorage，供 Index.onBackPress 判断是否拦截返回键
+  private syncDialogFlag() {
+    const hasAny = this.showClearDialog || this.showClearedDialog ||
+      this.showAboutDialog || this.showAnnouncementDialog || this.showThemeDialog;
+    AppStorage.setOrCreate('mineTabDialogOpen', hasAny);
+  }
+
+  // Index.onBackPress 检测到弹窗打开时写入此信号，按优先级关闭弹窗
+  onBackPressSignal() {
+    if (this.showThemeDialog) { this.showThemeDialog = false; }
+    else if (this.showAnnouncementDialog) { this.showAnnouncementDialog = false; }
+    else if (this.showAboutDialog) { this.showAboutDialog = false; }
+    else if (this.showClearedDialog) { this.showClearedDialog = false; }
+    else if (this.showClearDialog) { this.showClearDialog = false; }
   }
 
   openPrivacyPolicy() {
@@ -78,6 +100,15 @@ export struct MineTab {
     this.theme = THEMES[index];
     this.currentThemeName = THEMES[index].name;
     this.showThemeDialog = false;
+  }
+
+  toggleDarkMode() {
+    const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
+    const newValue = !this.darkMode;
+    ThemeManager.saveDarkMode(context, newValue);
+    this.darkMode = newValue;
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
+    this.currentThemeName = this.theme.name;
   }
 
   clearLocalData() {
@@ -534,6 +565,40 @@ export struct MineTab {
           .onClick(() => {
             this.showThemeDialog = true;
           })
+
+          // 深色模式切换
+          Row() {
+            Text('🌙')
+              .fontSize(26)
+              .margin({ right: 16 })
+
+            Column() {
+              Text('深色模式')
+                .fontSize(16)
+                .fontWeight(FontWeight.Medium)
+                .fontColor(this.theme.textPrimary)
+
+              Text(this.darkMode ? '已开启' : '已关闭')
+                .fontSize(12)
+                .fontColor(this.theme.textSecondary)
+                .margin({ top: 2 })
+            }
+            .alignItems(HorizontalAlign.Start)
+            .layoutWeight(1)
+
+            Toggle({ type: ToggleType.Switch, isOn: this.darkMode })
+              .width(48)
+              .height(28)
+              .onChange((isOn: boolean) => {
+                this.toggleDarkMode();
+              })
+          }
+          .width('100%')
+          .height(64)
+          .padding({ left: 16, right: 16 })
+          .backgroundColor(this.theme.card)
+          .borderRadius(16)
+          .alignItems(VerticalAlign.Center)
 
           this.SettingItem('🧹', '清除数据', '清空所有本地记录', () => {
             this.showClearDialog = true;

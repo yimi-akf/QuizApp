@@ -1,6 +1,6 @@
 import common from '@ohos.app.ability.common';
 import { AchievementStorage, Achievement, UserStats } from '../data/AchievementStorage';
-import { AppTheme, THEMES } from '../model/AppTheme';
+import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
 import { ThemeManager } from '../data/ThemeManager';
 import { popSafe } from '../utils/NavUtil';
 
@@ -8,6 +8,8 @@ import { popSafe } from '../utils/NavUtil';
 @Component
 export struct AchievementPage {
   @Consume('pageStack') pageStack: NavPathStack
+  @StorageLink('quizThemeIndex') @Watch('onThemeChange') themeIndex: number = 0;
+  @StorageLink('quizDarkMode') @Watch('onThemeChange') darkMode: boolean = false;
   @State theme: AppTheme = THEMES[0];
   @State userStats: UserStats = { answeredCount: 0, correctCount: 0, streakDays: 0, lastAnswerDate: '' };
   @State achievements: Achievement[] = [];
@@ -18,13 +20,17 @@ export struct AchievementPage {
 
   aboutToAppear() {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
-    this.theme = ThemeManager.getCurrentTheme(context);
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
     this.loadData();
 
     this.headerOpacity = 1;
     this.headerOffset = 0;
     this.listOpacity = 1;
     this.listOffset = 0;
+  }
+
+  onThemeChange() {
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
   }
 
   onPageShow() {

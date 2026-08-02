@@ -1,11 +1,13 @@
 import dataPreferences from '@ohos.data.preferences';
 import common from '@ohos.app.ability.common';
-import { AppTheme, DEFAULT_THEME_INDEX, THEMES } from '../model/AppTheme';
+import { AppTheme, DEFAULT_THEME_INDEX, THEMES, DARK_THEMES } from '../model/AppTheme';
 import hilog from '@ohos.hilog';
 
 const PREFERENCES_NAME = 'quiz_theme';
 const KEY_THEME_INDEX = 'theme_index';
 const APP_STORAGE_THEME_KEY = 'quizThemeIndex';
+const KEY_DARK_MODE = 'dark_mode';
+const APP_STORAGE_DARK_KEY = 'quizDarkMode';
 
 // 主题管理器：负责读取和保存当前主题索引
 export class ThemeManager {
@@ -26,6 +28,13 @@ export class ThemeManager {
     }
     try {
       const index = prefs.getSync(KEY_THEME_INDEX, DEFAULT_THEME_INDEX) as number;
+      const isDark = ThemeManager.isDarkMode(context);
+      if (isDark) {
+        if (index >= 0 && index < DARK_THEMES.length) {
+          return DARK_THEMES[index];
+        }
+        return DARK_THEMES[DEFAULT_THEME_INDEX];
+      }
       if (index >= 0 && index < THEMES.length) {
         return THEMES[index];
       }
@@ -53,10 +62,12 @@ export class ThemeManager {
     }
   }
 
-  // 将当前主题索引同步到 AppStorage，供跨页面监听
+  // 将当前主题索引和暗色模式状态同步到 AppStorage，供跨页面监听
   static syncToAppStorage(context: common.UIAbilityContext): void {
     const index = ThemeManager.getThemeIndex(context);
     AppStorage.setOrCreate(APP_STORAGE_THEME_KEY, index);
+    const isDark = ThemeManager.isDarkMode(context);
+    AppStorage.setOrCreate(APP_STORAGE_DARK_KEY, isDark);
   }
 
   // 获取当前主题索引
@@ -77,7 +88,7 @@ export class ThemeManager {
     }
   }
 
-  // 清除主题设置
+  // 清除所有主题和暗色模式设置
   static clearAll(context: common.UIAbilityContext): void {
     const prefs = ThemeManager.getPreferences(context);
     if (!prefs) {
@@ -88,6 +99,35 @@ export class ThemeManager {
       prefs.flushSync();
     } catch (e) {
       hilog.error(0x0001, 'ThemeManager', 'clearAll failed');
+    }
+  }
+
+  // 检查是否为暗色模式
+  static isDarkMode(context: common.UIAbilityContext): boolean {
+    const prefs = ThemeManager.getPreferences(context);
+    if (!prefs) {
+      return false;
+    }
+    try {
+      return prefs.getSync(KEY_DARK_MODE, false) as boolean;
+    } catch (e) {
+      hilog.error(0x0001, 'ThemeManager', 'isDarkMode failed');
+      return false;
+    }
+  }
+
+  // 保存暗色模式偏好
+  static saveDarkMode(context: common.UIAbilityContext, isDark: boolean): void {
+    const prefs = ThemeManager.getPreferences(context);
+    if (!prefs) {
+      return;
+    }
+    try {
+      prefs.putSync(KEY_DARK_MODE, isDark);
+      prefs.flushSync();
+      AppStorage.setOrCreate(APP_STORAGE_DARK_KEY, isDark);
+    } catch (e) {
+      hilog.error(0x0001, 'ThemeManager', 'saveDarkMode failed');
     }
   }
 }

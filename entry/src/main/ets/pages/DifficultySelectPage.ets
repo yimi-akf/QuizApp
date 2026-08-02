@@ -1,7 +1,7 @@
 import common from '@ohos.app.ability.common';
 import { Difficulty, Topic, QuizMode } from '../model/Question';
 import { QuizPageParams } from './QuizPage';
-import { AppTheme, THEMES } from '../model/AppTheme';
+import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
 import { ThemeManager } from '../data/ThemeManager';
 
 export interface DifficultySelectParams {
@@ -39,7 +39,7 @@ export struct DifficultySelectPage {
   }
 
   onThemeIndexChange() {
-    this.theme = THEMES[this.themeIndex] ?? THEMES[0];
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
   }
 
   build() {

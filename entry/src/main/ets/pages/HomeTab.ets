@@ -1,16 +1,18 @@
 import common from '@ohos.app.ability.common';
 import { ProgressStorage, LastProgressSummary } from '../data/ProgressStorage';
 import { ThemeManager } from '../data/ThemeManager';
-import { AppTheme, THEMES } from '../model/AppTheme';
+import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
 import { QuizPageParams } from './QuizPage';
 import { APP_NAME, APP_SLOGAN } from '../data/AppConstants';
 import { topicLabel, difficultyLabel } from '../utils/FormatUtil';
+import { DailyStorage } from '../data/DailyStorage';
 
 // 首页标签内容
 @Component
 export struct HomeTab {
   @Consume('pageStack') pageStack: NavPathStack
   @StorageLink('quizThemeIndex') @Watch('onThemeIndexChange') themeIndex: number = 0;
+  @StorageLink('quizDarkMode') @Watch('onThemeIndexChange') darkMode: boolean = false;
   @State theme: AppTheme = THEMES[0];
   @State headerOpacity: number = 0
   @State headerOffset: number = -30
@@ -18,6 +20,7 @@ export struct HomeTab {
   @State contentOffset: number = 40
   @State lastProgress: LastProgressSummary | null = null
   @State lastHomeModule: string = ''
+  @State isDailyCompleted: boolean = false;
   @StorageLink('homeTabShowTrigger') @Watch('onHomeTabShow') homeTabShowTrigger: number = 0;
 
   aboutToAppear() {
@@ -30,18 +33,18 @@ export struct HomeTab {
 
   onPageShow() {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
-    this.theme = THEMES[this.themeIndex] ?? THEMES[0];
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
     this.loadData(context);
   }
 
   onHomeTabShow() {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
-    this.theme = THEMES[this.themeIndex] ?? THEMES[0];
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
     this.loadData(context);
   }
 
   onThemeIndexChange() {
-    this.theme = THEMES[this.themeIndex] ?? THEMES[0];
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
   }
 
   playEntranceAnimation() {
@@ -54,6 +57,7 @@ export struct HomeTab {
   loadData(context: common.UIAbilityContext) {
     this.lastProgress = ProgressStorage.loadLastProgress(context)
     this.lastHomeModule = ProgressStorage.loadLastHomeModule(context)
+    this.isDailyCompleted = DailyStorage.isCompletedToday(context);
   }
 
   saveLastHomeModule(module: string) {
@@ -74,6 +78,11 @@ export struct HomeTab {
         shouldContinue: true
       } as QuizPageParams
     });
+  }
+
+  goToDailyQuestion() {
+    const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
+    this.pageStack.pushPath({ name: 'DailyQuestion' });
   }
 
   @Builder
@@ -219,6 +228,52 @@ export struct HomeTab {
             normal: { .scale({ x: 1, y: 1 }) }
           })
           .onClick(() => this.continueLastProgress())
+        }
+
+        // 每日一题
+        if (!this.isDailyCompleted) {
+          Column() {
+            Row() {
+              Text('🌅')
+                .fontSize(28)
+                .margin({ right: 12 })
+
+              Column() {
+                Text('每日一题')
+                  .fontSize(14)
+                  .fontColor(this.theme.primary)
+                  .fontWeight(FontWeight.Bold)
+                  .margin({ bottom: 4 })
+
+                Text('每天一道精选题目，坚持打卡')
+                  .fontSize(15)
+                  .fontColor(this.theme.textPrimary)
+              }
+              .alignItems(HorizontalAlign.Start)
+              .layoutWeight(1)
+
+              Text('›')
+                .fontSize(24)
+                .fontColor(this.theme.primary)
+            }
+            .width('100%')
+            .alignItems(VerticalAlign.Center)
+          }
+          .width('100%')
+          .padding(14)
+          .backgroundColor(this.theme.card)
+          .borderRadius(20)
+          .shadow({
+            radius: 10,
+            color: 'rgba(0,0,0,0.06)',
+            offsetX: 0,
+            offsetY: 4
+          })
+          .stateStyles({
+            pressed: { .scale({ x: 0.98, y: 0.98 }) },
+            normal: { .scale({ x: 1, y: 1 }) }
+          })
+          .onClick(() => this.goToDailyQuestion())
         }
 
         // 功能入口网格

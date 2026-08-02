@@ -1,6 +1,6 @@
 import common from '@ohos.app.ability.common';
 import { HistoryRecord, HistoryStorage } from '../data/HistoryStorage';
-import { AppTheme, THEMES } from '../model/AppTheme';
+import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
 import { ThemeManager } from '../data/ThemeManager';
 import { topicLabel, difficultyLabel, formatTime, difficultyColor, difficultyTagBgColor } from '../utils/FormatUtil';
 import { popSafe } from '../utils/NavUtil';
@@ -9,6 +9,8 @@ import { popSafe } from '../utils/NavUtil';
 @Component
 export struct HistoryPage {
   @Consume('pageStack') pageStack: NavPathStack
+  @StorageLink('quizThemeIndex') @Watch('onThemeChange') themeIndex: number = 0;
+  @StorageLink('quizDarkMode') @Watch('onThemeChange') darkMode: boolean = false;
   @State theme: AppTheme = THEMES[0];
   @State records: HistoryRecord[] = []
   @State showClearDialog: boolean = false
@@ -21,13 +23,17 @@ export struct HistoryPage {
 
   aboutToAppear() {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
-    this.theme = ThemeManager.getCurrentTheme(context);
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
     this.loadRecords()
     this.headerOpacity = 1
     this.headerOffset = 0
     this.listOpacity = 1
     this.listOffset = 0
     this.footerOpacity = 1
+  }
+
+  onThemeChange() {
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
   }
 
   onPageShow() {

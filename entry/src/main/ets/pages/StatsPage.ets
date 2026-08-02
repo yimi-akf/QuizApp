@@ -1,7 +1,7 @@
 import common from '@ohos.app.ability.common';
 import { HistoryStorage, HistoryRecord } from '../data/HistoryStorage';
 import { StatsStorage, QuizStats, TopicProgress, DailyStat } from '../data/StatsStorage';
-import { AppTheme, THEMES } from '../model/AppTheme';
+import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
 import { ThemeManager } from '../data/ThemeManager';
 import { EmptyState } from '../components/EmptyState';
 import { formatTime } from '../utils/FormatUtil';
@@ -12,6 +12,8 @@ import { Topic } from '../model/Question';
 @Component
 export struct StatsPage {
   @Consume('pageStack') pageStack: NavPathStack
+  @StorageLink('quizDarkMode') @Watch('onThemeChange') darkMode: boolean = false;
+  @StorageLink('quizThemeIndex') @Watch('onThemeChange') themeIndex: number = 0;
   @State theme: AppTheme = THEMES[0];
   @State stats: QuizStats = {
     totalQuizzes: 0,
@@ -32,13 +34,17 @@ export struct StatsPage {
 
   aboutToAppear() {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
-    this.theme = ThemeManager.getCurrentTheme(context);
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
     this.loadData();
 
     this.headerOpacity = 1;
     this.headerOffset = 0;
     this.contentOpacity = 1;
     this.contentOffset = 0;
+  }
+
+  onThemeChange() {
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
   }
 
   onPageShow() {
@@ -175,9 +181,16 @@ export struct StatsPage {
                     .width('100%')
                     .margin({ bottom: 12 })
 
-                  ForEach(this.stats.dailyStats.slice(-7), (item: DailyStat) => {
-                    this.DailyStatItem(item)
-                  }, (item: DailyStat) => item.date)
+                  // 柱状图
+                  Row({ space: 6 }) {
+                    ForEach(this.stats.dailyStats.slice(-7), (item: DailyStat) => {
+                      this.BarChartItem(item)
+                    }, (item: DailyStat) => item.date)
+                  }
+                  .width('100%')
+                  .height(140)
+                  .alignItems(VerticalAlign.Bottom)
+                  .padding({ top: 10 })
                 }
                 .width('100%')
                 .padding(16)
@@ -266,36 +279,38 @@ export struct StatsPage {
   }
 
   @Builder
-  DailyStatItem(item: DailyStat) {
-    Row() {
-      Text(item.date.slice(5))
-        .fontSize(13)
-        .fontColor(this.theme.textSecondary)
-        .width(60)
-
-      Stack({ alignContent: Alignment.Start }) {
-        Row()
+  BarChartItem(item: DailyStat) {
+    Column({ space: 4 }) {
+      // 柱状条
+      Column() {
+        Column()
           .width('100%')
-          .height(8)
-          .backgroundColor(this.theme.background)
-          .borderRadius(4)
-
-        Row()
-          .width(item.total > 0 ? `${Math.round((item.correct / item.total) * 100)}%` : '0%')
-          .height(8)
-          .backgroundColor(this.theme.primary)
-          .borderRadius(4)
+          .height(item.total > 0 ? `${Math.max(4, Math.round((item.correct / item.total) * 100))}%` : '4%')
+          .backgroundColor(item.total > 0 && item.correct === item.total ? this.theme.success : this.theme.primary)
+          .borderRadius({ topLeft: 4, topRight: 4 })
       }
+      .width(32)
       .layoutWeight(1)
-      .height(8)
+      .justifyContent(FlexAlign.End)
 
-      Text(`${item.correct}/${item.total}`)
-        .fontSize(13)
+      // 日期标签
+      Text(item.date.slice(5))
+        .fontSize(10)
+        .fontColor(this.theme.textSecondary)
+        .textAlign(TextAlign.Center)
+        .width(32)
+
+      // 数值标签
+      Text(item.total > 0 ? `${Math.round(item.correct / item.total * 100)}%` : '-')
+        .fontSize(10)
         .fontColor(this.theme.textPrimary)
-        .width(50)
-        .textAlign(TextAlign.End)
+        .fontWeight(FontWeight.Medium)
+        .textAlign(TextAlign.Center)
+        .width(32)
     }
-    .width('100%')
-    .padding({ top: 8, bottom: 8 })
+    .width(32)
+    .height('100%')
+    .justifyContent(FlexAlign.End)
+    .alignItems(HorizontalAlign.Center)
   }
 }

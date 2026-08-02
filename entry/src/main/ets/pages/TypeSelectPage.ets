@@ -1,7 +1,7 @@
 import common from '@ohos.app.ability.common';
 import { Topic } from '../model/Question';
 import { DifficultySelectParams } from './DifficultySelectPage';
-import { AppTheme, THEMES } from '../model/AppTheme';
+import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
 import { ThemeManager } from '../data/ThemeManager';
 
 // 题目类型选择页
@@ -9,6 +9,7 @@ import { ThemeManager } from '../data/ThemeManager';
 export struct TypeSelectPage {
   @Consume('pageStack') pageStack: NavPathStack
   @StorageLink('quizThemeIndex') @Watch('onThemeIndexChange') themeIndex: number = 0;
+  @StorageLink('quizDarkMode') @Watch('onThemeIndexChange') darkMode: boolean = false;
   @State theme: AppTheme = THEMES[0];
   @State selectedTopic: Topic | null = null;
 
@@ -33,7 +34,7 @@ export struct TypeSelectPage {
   }
 
   onThemeIndexChange() {
-    this.theme = THEMES[this.themeIndex] ?? THEMES[0];
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
   }
 
   build() {

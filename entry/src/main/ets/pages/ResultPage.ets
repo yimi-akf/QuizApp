@@ -4,7 +4,7 @@ import { HistoryStorage, createHistoryRecord } from '../data/HistoryStorage';
 import { AchievementStorage } from '../data/AchievementStorage';
 import { StatsStorage } from '../data/StatsStorage';
 import { Difficulty, Question, QuestionType, Topic, QuizMode } from '../model/Question';
-import { AppTheme, THEMES } from '../model/AppTheme';
+import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
 import { ThemeManager } from '../data/ThemeManager';
 import { formatTime } from '../utils/FormatUtil';
 import { DifficultySelectParams } from './DifficultySelectPage';
@@ -42,6 +42,8 @@ export struct ResultPage {
     answers: [],
     questionIds: []
   }
+  @StorageLink('quizThemeIndex') @Watch('onDarkModeChange') themeIndex: number = 0;
+  @StorageLink('quizDarkMode') @Watch('onDarkModeChange') darkMode: boolean = false;
   @State theme: AppTheme = THEMES[0];
   @State userAnswers: number[] = [];
   @State currentQuestions: Question[] = [];
@@ -180,6 +182,10 @@ export struct ResultPage {
     this.listOpacity = 1;
     // 分数计数动画：从 0 逐步递增到最终分数，触发 displayScore 中间状态变化
     this.startScoreAnimation();
+  }
+
+  onDarkModeChange() {
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
   }
 
   // 分数计数动画：在约 1 秒内从 0 递增到 score

@@ -1,7 +1,8 @@
 import common from '@ohos.app.ability.common';
 import curves from '@ohos.curves';
 import { ThemeManager } from '../data/ThemeManager';
-import { AppTheme, THEMES } from '../model/AppTheme';
+import { DailyStorage } from '../data/DailyStorage';
+import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
 import { TypeSelectPage } from './TypeSelectPage';
 import { DifficultySelectPage, DifficultySelectParams } from './DifficultySelectPage';
 import { QuizPage, QuizPageParams } from './QuizPage';
@@ -20,6 +21,7 @@ import { MineTab } from './MineTab';
 struct Index {
   @Provide('pageStack') pageStack: NavPathStack = new NavPathStack()
   @StorageLink('quizThemeIndex') @Watch('onThemeIndexChange') themeIndex: number = 0;
+  @StorageLink('quizDarkMode') @Watch('onThemeIndexChange') darkMode: boolean = false;
   @State theme: AppTheme = THEMES[0];
   @State currentTabIndex: number = 0;
   private tabsController: TabsController = new TabsController();
@@ -35,7 +37,20 @@ struct Index {
   }
 
   onThemeIndexChange() {
-    this.theme = THEMES[this.themeIndex] ?? THEMES[0];
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
+  }
+
+  // 系统返回键拦截：MineTab 弹窗打开时优先关弹窗，符合华为应用市场 UX 规范
+  onBackPress(): boolean {
+    // 仅在"我的"标签且有弹窗打开时拦截；其他情况交给 NavPathStack 或系统
+    if (this.currentTabIndex === 2) {
+      const dialogOpen = AppStorage.get<boolean>('mineTabDialogOpen') ?? false;
+      if (dialogOpen) {
+        AppStorage.setOrCreate('mineTabBackPress', Date.now());
+        return true;
+      }
+    }
+    return false;
   }
 
   @Builder
@@ -78,6 +93,11 @@ struct Index {
     } else if (name === 'Stats') {
       NavDestination() {
         StatsPage()
+      }
+      .hideTitleBar(true)
+    } else if (name === 'DailyQuestion') {
+      NavDestination() {
+        DailyQuestionPage()
       }
       .hideTitleBar(true)
     }
@@ -194,3 +214,4 @@ struct Index {
     .height('100%')
   }
 }
+import { DailyQuestionPage } from './DailyQuestionPage';

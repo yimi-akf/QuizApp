@@ -528,6 +528,11 @@ export struct MineTab {
         // 设置项列表
         Scroll() {
         Column({ space: 12 }) {
+          // 学习热力图
+          this.SettingItem('📊', '学习热力图', '查看打卡日历', () => {
+            this.pageStack.pushPath({ name: 'Heatmap' });
+          })
+
           // 主题换肤项需要直接读取 currentThemeName，不能通过 @Builder 参数传递，否则状态变化不刷新
           Row() {
             Text('🎨')

@@ -3,13 +3,13 @@ import { findQuestionById } from '../data/QuestionBank';
 import { DailyStorage } from '../data/DailyStorage';
 import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
 import { ThemeManager } from '../data/ThemeManager';
-import { Question, QuestionType } from '../model/Question';
+import { Question, QuestionType, Difficulty, Topic } from '../model/Question';
 
 const EMPTY_QUESTION: Question = {
   id: 0,
   type: QuestionType.SINGLE_CHOICE,
-  difficulty: 'entry' as any,
-  topic: 'knowledge' as any,
+  difficulty: Difficulty.ENTRY,
+  topic: Topic.KNOWLEDGE,
   title: '暂无题目',
   options: [],
   correctIndex: -1,
@@ -68,7 +68,7 @@ export struct DailyQuestionPage {
 
   goBack() {
     try {
-      this.pageStack.popPath();
+      this.pageStack.pop();
     } catch (e) {
       // ignore
     }
@@ -78,8 +78,9 @@ export struct DailyQuestionPage {
     Column() {
       // 顶部标题区
       Column() {
-        Text('🌅')
-          .fontSize(40)
+        Text('✦')
+          .fontSize(44)
+          .fontColor(Color.White)
           .margin({ bottom: 8 })
 
         Text('每日一题')
@@ -214,7 +215,7 @@ export struct DailyQuestionPage {
             .borderRadius(16)
           }
           .width('100%')
-          .padding(20)
+          .padding({ left: 20, right: 20, top: 4, bottom: 20 })
         }
         .layoutWeight(1)
         .scrollBar(BarState.Off)

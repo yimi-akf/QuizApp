@@ -8,7 +8,6 @@ import { FavoriteStorage } from '../data/FavoriteStorage';
 import { ThemeManager } from '../data/ThemeManager';
 import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
 import { PRIVACY_URL, APP_NAME, APP_VERSION, APP_DEVELOPER } from '../data/AppConstants';
-import { Toggle } from '@ohos.arkui.Toggle';
 import hilog from '@ohos.hilog';
 
 // 我的标签内容
@@ -35,7 +34,7 @@ export struct MineTab {
   aboutToAppear() {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     ThemeManager.syncToAppStorage(context);
-    this.theme = THEMES[this.themeIndex] ?? THEMES[0];
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
     this.currentThemeName = this.theme.name;
     this.playEntranceAnimation();
     // 初始化返回键拦截信号
@@ -97,8 +96,8 @@ export struct MineTab {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     ThemeManager.setThemeIndex(context, index);
     this.themeIndex = index;
-    this.theme = THEMES[index];
-    this.currentThemeName = THEMES[index].name;
+    this.theme = this.darkMode ? (DARK_THEMES[index] ?? DARK_THEMES[0]) : (THEMES[index] ?? THEMES[0]);
+    this.currentThemeName = this.theme.name;
     this.showThemeDialog = false;
   }
 
@@ -527,6 +526,7 @@ export struct MineTab {
         .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP])
 
         // 设置项列表
+        Scroll() {
         Column({ space: 12 }) {
           // 主题换肤项需要直接读取 currentThemeName，不能通过 @Builder 参数传递，否则状态变化不刷新
           Row() {
@@ -617,8 +617,11 @@ export struct MineTab {
           })
         }
         .width('100%')
-        .layoutWeight(1)
         .padding({ left: 20, right: 20, top: 20, bottom: 20 })
+        .backgroundColor(this.theme.background)
+        }
+        .layoutWeight(1)
+        .scrollBar(BarState.Off)
         .backgroundColor(this.theme.background)
         .opacity(this.contentOpacity)
         .translate({ y: this.contentOffset })

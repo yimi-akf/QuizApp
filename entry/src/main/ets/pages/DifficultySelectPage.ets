@@ -13,6 +13,7 @@ export interface DifficultySelectParams {
 export struct DifficultySelectPage {
   @Consume('pageStack') pageStack: NavPathStack
   @StorageLink('quizThemeIndex') @Watch('onThemeIndexChange') themeIndex: number = 0;
+  @StorageLink('quizDarkMode') @Watch('onThemeIndexChange') darkMode: boolean = false;
   @State theme: AppTheme = THEMES[0];
   public topic: Topic = Topic.KNOWLEDGE;
   @State selectedDifficulty: Difficulty | 'mixed' | null = null;
@@ -29,7 +30,7 @@ export struct DifficultySelectPage {
   aboutToAppear() {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     ThemeManager.syncToAppStorage(context);
-    this.theme = THEMES[this.themeIndex] ?? THEMES[0];
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
     this.titleOpacity = 1
     this.titleOffset = 0
     this.cardsOpacity = 1

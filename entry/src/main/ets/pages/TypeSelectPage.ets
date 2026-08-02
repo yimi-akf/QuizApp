@@ -24,7 +24,7 @@ export struct TypeSelectPage {
   aboutToAppear() {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     ThemeManager.syncToAppStorage(context);
-    this.theme = THEMES[this.themeIndex] ?? THEMES[0];
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
     this.titleOpacity = 1
     this.titleOffset = 0
     this.cardsOpacity = 1

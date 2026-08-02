@@ -11,6 +11,7 @@ import { HistoryPage } from './HistoryPage';
 import { WrongBookPage } from './WrongBookPage';
 import { AchievementPage } from './AchievementPage';
 import { StatsPage } from './StatsPage';
+import { DailyQuestionPage } from './DailyQuestionPage';
 import { HomeTab } from './HomeTab';
 import { FavoriteTab } from './FavoriteTab';
 import { MineTab } from './MineTab';
@@ -29,11 +30,11 @@ struct Index {
   aboutToAppear() {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     ThemeManager.syncToAppStorage(context);
-    this.theme = THEMES[this.themeIndex] ?? THEMES[0];
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
   }
 
   onPageShow() {
-    this.theme = THEMES[this.themeIndex] ?? THEMES[0];
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
   }
 
   onThemeIndexChange() {
@@ -60,46 +61,55 @@ struct Index {
         TypeSelectPage()
       }
       .hideTitleBar(true)
+      .backgroundColor(this.theme.background)
     } else if (name === 'DifficultySelect') {
       NavDestination() {
         DifficultySelectPage({ topic: (param as DifficultySelectParams).topic })
       }
       .hideTitleBar(true)
+      .backgroundColor(this.theme.background)
     } else if (name === 'Quiz') {
       NavDestination() {
         QuizPage({ param: param as QuizPageParams })
       }
       .hideTitleBar(true)
+      .backgroundColor(this.theme.background)
     } else if (name === 'Result') {
       NavDestination() {
         ResultPage({ param: param as ResultPageParams })
       }
       .hideTitleBar(true)
+      .backgroundColor(this.theme.background)
     } else if (name === 'History') {
       NavDestination() {
         HistoryPage()
       }
       .hideTitleBar(true)
+      .backgroundColor(this.theme.background)
     } else if (name === 'WrongBook') {
       NavDestination() {
         WrongBookPage()
       }
       .hideTitleBar(true)
+      .backgroundColor(this.theme.background)
     } else if (name === 'Achievement') {
       NavDestination() {
         AchievementPage()
       }
       .hideTitleBar(true)
+      .backgroundColor(this.theme.background)
     } else if (name === 'Stats') {
       NavDestination() {
         StatsPage()
       }
       .hideTitleBar(true)
+      .backgroundColor(this.theme.background)
     } else if (name === 'DailyQuestion') {
       NavDestination() {
         DailyQuestionPage()
       }
       .hideTitleBar(true)
+      .backgroundColor(this.theme.background)
     }
   }
 
@@ -148,16 +158,16 @@ struct Index {
     }
     .width(280)
     .height(60)
-    .backgroundColor('rgba(255,255,255,0.48)')
+    .backgroundColor(this.darkMode ? 'rgba(30,30,30,0.75)' : 'rgba(255,255,255,0.48)')
     .borderRadius(30)
     .backgroundBlurStyle(BlurStyle.COMPONENT_THICK, {
-      colorMode: ThemeColorMode.LIGHT,
+      colorMode: this.darkMode ? ThemeColorMode.DARK : ThemeColorMode.LIGHT,
       adaptiveColor: AdaptiveColor.DEFAULT
     })
-    .border({ width: 1.5, color: 'rgba(255,255,255,0.75)' })
+    .border({ width: 1.5, color: this.darkMode ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.75)' })
     .shadow({
       radius: 40,
-      color: 'rgba(0,0,0,0.10)',
+      color: this.darkMode ? 'rgba(0,0,0,0.30)' : 'rgba(0,0,0,0.10)',
       offsetX: 0,
       offsetY: 12
     })
@@ -210,8 +220,8 @@ struct Index {
     .navDestination(this.pageMap)
     .hideTitleBar(true)
     .hideBackButton(true)
+    .backgroundColor(this.theme.background)
     .width('100%')
     .height('100%')
   }
 }
-import { DailyQuestionPage } from './DailyQuestionPage';

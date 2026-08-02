@@ -26,7 +26,7 @@ export struct HomeTab {
   aboutToAppear() {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     ThemeManager.syncToAppStorage(context);
-    this.theme = THEMES[this.themeIndex] ?? THEMES[0];
+    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
     this.loadData(context);
     this.playEntranceAnimation();
   }
@@ -230,52 +230,6 @@ export struct HomeTab {
           .onClick(() => this.continueLastProgress())
         }
 
-        // 每日一题
-        if (!this.isDailyCompleted) {
-          Column() {
-            Row() {
-              Text('🌅')
-                .fontSize(28)
-                .margin({ right: 12 })
-
-              Column() {
-                Text('每日一题')
-                  .fontSize(14)
-                  .fontColor(this.theme.primary)
-                  .fontWeight(FontWeight.Bold)
-                  .margin({ bottom: 4 })
-
-                Text('每天一道精选题目，坚持打卡')
-                  .fontSize(15)
-                  .fontColor(this.theme.textPrimary)
-              }
-              .alignItems(HorizontalAlign.Start)
-              .layoutWeight(1)
-
-              Text('›')
-                .fontSize(24)
-                .fontColor(this.theme.primary)
-            }
-            .width('100%')
-            .alignItems(VerticalAlign.Center)
-          }
-          .width('100%')
-          .padding(14)
-          .backgroundColor(this.theme.card)
-          .borderRadius(20)
-          .shadow({
-            radius: 10,
-            color: 'rgba(0,0,0,0.06)',
-            offsetX: 0,
-            offsetY: 4
-          })
-          .stateStyles({
-            pressed: { .scale({ x: 0.98, y: 0.98 }) },
-            normal: { .scale({ x: 1, y: 1 }) }
-          })
-          .onClick(() => this.goToDailyQuestion())
-        }
-
         // 功能入口网格
         Grid() {
           GridItem() {
@@ -305,6 +259,12 @@ export struct HomeTab {
           GridItem() {
             this.FunctionCard('📜', '答题历史', '查看过往成绩', 'history', () => {
               this.pageStack.pushPath({ name: 'History' });
+            })
+          }
+
+          GridItem() {
+            this.FunctionCard('✦', '每日一题', '每天一道精选题目', 'daily', () => {
+              this.goToDailyQuestion()
             })
           }
         }

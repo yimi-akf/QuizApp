@@ -123,7 +123,7 @@ export struct DifficultySelectPage {
         this.DifficultyCard(
           '混合乱序',
           '该类型下全部题目随机混合',
-          '#9C27B0',
+          this.theme.difficultyMixedColor,
           'mixed'
         )
       }
@@ -273,7 +273,7 @@ export struct DifficultySelectPage {
     })
     .shadow({
       radius: 8,
-      color: 'rgba(0,0,0,0.06)',
+      color: this.theme.cardShadow,
       offsetX: 0,
       offsetY: 4
     })

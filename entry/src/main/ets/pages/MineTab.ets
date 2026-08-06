@@ -1,11 +1,6 @@
 import common from '@ohos.app.ability.common';
-import { ProgressStorage } from '../data/ProgressStorage';
-import { HistoryStorage } from '../data/HistoryStorage';
-import { WrongBookStorage } from '../data/WrongBookStorage';
-import { AchievementStorage } from '../data/AchievementStorage';
-import { StatsStorage } from '../data/StatsStorage';
-import { FavoriteStorage } from '../data/FavoriteStorage';
-import { ThemeManager } from '../data/ThemeManager';
+import { ConfigurationConstant } from '@kit.AbilityKit';
+import { ThemeManager, DarkModeSetting } from '../data/ThemeManager';
 import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
 import { PRIVACY_URL, APP_NAME, APP_VERSION, APP_DEVELOPER } from '../data/AppConstants';
 import hilog from '@ohos.hilog';
@@ -16,6 +11,7 @@ export struct MineTab {
   @Consume('pageStack') pageStack: NavPathStack
   @StorageLink('quizThemeIndex') @Watch('onThemeIndexChange') themeIndex: number = 0;
   @StorageLink('quizDarkMode') @Watch('onThemeIndexChange') darkMode: boolean = false;
+  @StorageLink('quizDarkModeSetting') @Watch('onThemeIndexChange') darkModeSetting: string = 'system';
   @State theme: AppTheme = THEMES[0];
   @State currentThemeName: string = THEMES[0].name;
   @State headerOpacity: number = 0;
@@ -23,11 +19,10 @@ export struct MineTab {
   @State contentOffset: number = 40;
   @StorageLink('mineTabShowTrigger') @Watch('onMineTabShow') mineTabShowTrigger: number = 0;
 
-  @State @Watch('syncDialogFlag') showClearDialog: boolean = false
-  @State @Watch('syncDialogFlag') showClearedDialog: boolean = false
   @State @Watch('syncDialogFlag') showAboutDialog: boolean = false
   @State @Watch('syncDialogFlag') showAnnouncementDialog: boolean = false
   @State @Watch('syncDialogFlag') showThemeDialog: boolean = false
+  @State @Watch('syncDialogFlag') showDarkModeDialog: boolean = false
   // 监听来自 Index.onBackPress 的信号，关闭 MineTab 弹窗
   @StorageLink('mineTabBackPress') @Watch('onBackPressSignal') mineTabBackPress: number = 0;
 
@@ -66,18 +61,16 @@ export struct MineTab {
 
   // 同步弹窗状态到 AppStorage，供 Index.onBackPress 判断是否拦截返回键
   private syncDialogFlag() {
-    const hasAny = this.showClearDialog || this.showClearedDialog ||
-      this.showAboutDialog || this.showAnnouncementDialog || this.showThemeDialog;
+    const hasAny = this.showAboutDialog || this.showAnnouncementDialog || this.showThemeDialog || this.showDarkModeDialog;
     AppStorage.setOrCreate('mineTabDialogOpen', hasAny);
   }
 
   // Index.onBackPress 检测到弹窗打开时写入此信号，按优先级关闭弹窗
   onBackPressSignal() {
     if (this.showThemeDialog) { this.showThemeDialog = false; }
+    else if (this.showDarkModeDialog) { this.showDarkModeDialog = false; }
     else if (this.showAnnouncementDialog) { this.showAnnouncementDialog = false; }
     else if (this.showAboutDialog) { this.showAboutDialog = false; }
-    else if (this.showClearedDialog) { this.showClearedDialog = false; }
-    else if (this.showClearDialog) { this.showClearDialog = false; }
   }
 
   openPrivacyPolicy() {
@@ -101,33 +94,46 @@ export struct MineTab {
     this.showThemeDialog = false;
   }
 
-  toggleDarkMode() {
+  changeDarkModeSetting(setting: DarkModeSetting) {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
-    const newValue = !this.darkMode;
-    ThemeManager.saveDarkMode(context, newValue);
-    this.darkMode = newValue;
-    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
+    ThemeManager.saveDarkModeSetting(context, setting);
+    this.darkModeSetting = setting;
+    // 通知 EntryAbility 更新缓存
+    AppStorage.setOrCreate('darkModeSettingChanged', Date.now());
+
+    // 计算实际是否深色
+    let isDark: boolean;
+    if (setting === 'dark') {
+      isDark = true;
+    } else if (setting === 'light') {
+      isDark = false;
+    } else {
+      isDark = ThemeManager.isSystemDarkMode(context);
+    }
+
+    // 通过 AppStorage 设置，确保所有页面的 @Watch 触发
+    AppStorage.setOrCreate('quizDarkMode', isDark);
+
+    this.theme = isDark ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
     this.currentThemeName = this.theme.name;
+
+    // 同步系统颜色模式，影响状态栏等原生UI
+    try {
+      context.getApplicationContext().setColorMode(
+        isDark ? ConfigurationConstant.ColorMode.COLOR_MODE_DARK : ConfigurationConstant.ColorMode.COLOR_MODE_LIGHT
+      );
+    } catch (e) {
+      // ignore
+    }
+
+    this.showDarkModeDialog = false;
   }
 
-  clearLocalData() {
-    const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
-    ProgressStorage.clearAll(context);
-    HistoryStorage.clearAll(context);
-    WrongBookStorage.clearAll(context);
-    AchievementStorage.clearAll(context);
-    StatsStorage.clearAll(context);
-    FavoriteStorage.clearAll(context);
-    ThemeManager.clearAll(context);
-    this.themeIndex = 0;
-    this.theme = THEMES[0];
-    this.currentThemeName = THEMES[0].name;
-    this.showClearDialog = false;
-    this.showClearedDialog = true;
-  }
-
-  onClearedConfirm() {
-    this.showClearedDialog = false;
+  // 获取深色模式设置的显示名称
+  darkModeSettingLabel(): string {
+    if (this.darkModeSetting === 'dark') return '深色模式';
+    if (this.darkModeSetting === 'light') return '浅色模式';
+    return '跟随系统';
   }
 
   @Builder
@@ -296,7 +302,179 @@ export struct MineTab {
       .borderRadius(20)
       .shadow({
         radius: 16,
-        color: 'rgba(0,0,0,0.2)',
+        color: this.theme.dialogShadow,
+        offsetX: 0,
+        offsetY: 8
+      })
+      .transition(TransitionEffect.asymmetric(
+        TransitionEffect.OPACITY.combine(TransitionEffect.scale({ x: 0.9, y: 0.9 })),
+        TransitionEffect.OPACITY.combine(TransitionEffect.scale({ x: 0.9, y: 0.9 }))
+      ))
+    }
+    .width('100%')
+    .height('100%')
+    .justifyContent(FlexAlign.Center)
+    .backgroundColor(this.theme.overlayScrim)
+  }
+
+  @Builder
+  DarkModeDialog() {
+    Column() {
+      Column() {
+        Text('🌙')
+          .fontSize(40)
+          .margin({ bottom: 12 })
+
+        Text('深色模式')
+          .fontSize(20)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(this.theme.textPrimary)
+          .margin({ bottom: 16 })
+
+        Column({ space: 10 }) {
+          // 跟随系统
+          Row() {
+            Row()
+              .width(24)
+              .height(24)
+              .borderRadius(12)
+              .backgroundColor('#607D8B')
+              .margin({ right: 12 })
+
+            Column() {
+              Text('跟随系统')
+                .fontSize(16)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(this.theme.textPrimary)
+              Text('随系统深色模式自动切换')
+                .fontSize(12)
+                .fontColor(this.theme.textSecondary)
+                .margin({ top: 2 })
+            }
+            .alignItems(HorizontalAlign.Start)
+            .layoutWeight(1)
+
+            if (this.darkModeSetting === 'system') {
+              Text('✓')
+                .fontSize(22)
+                .fontColor(this.theme.primary)
+                .fontWeight(FontWeight.Bold)
+            }
+          }
+          .width('100%')
+          .padding(14)
+          .backgroundColor(this.darkModeSetting === 'system' ? this.theme.card : this.theme.background)
+          .border({ width: this.darkModeSetting === 'system' ? 2 : 0, color: this.theme.primary })
+          .borderRadius(12)
+          .stateStyles({
+            pressed: { .scale({ x: 0.98, y: 0.98 }) },
+            normal: { .scale({ x: 1, y: 1 }) }
+          })
+          .onClick(() => this.changeDarkModeSetting('system'))
+
+          // 浅色模式
+          Row() {
+            Row()
+              .width(24)
+              .height(24)
+              .borderRadius(12)
+              .backgroundColor('#FFD54F')
+              .margin({ right: 12 })
+
+            Column() {
+              Text('浅色模式')
+                .fontSize(16)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(this.theme.textPrimary)
+              Text('始终使用浅色主题')
+                .fontSize(12)
+                .fontColor(this.theme.textSecondary)
+                .margin({ top: 2 })
+            }
+            .alignItems(HorizontalAlign.Start)
+            .layoutWeight(1)
+
+            if (this.darkModeSetting === 'light') {
+              Text('✓')
+                .fontSize(22)
+                .fontColor(this.theme.primary)
+                .fontWeight(FontWeight.Bold)
+            }
+          }
+          .width('100%')
+          .padding(14)
+          .backgroundColor(this.darkModeSetting === 'light' ? this.theme.card : this.theme.background)
+          .border({ width: this.darkModeSetting === 'light' ? 2 : 0, color: this.theme.primary })
+          .borderRadius(12)
+          .stateStyles({
+            pressed: { .scale({ x: 0.98, y: 0.98 }) },
+            normal: { .scale({ x: 1, y: 1 }) }
+          })
+          .onClick(() => this.changeDarkModeSetting('light'))
+
+          // 深色模式
+          Row() {
+            Row()
+              .width(24)
+              .height(24)
+              .borderRadius(12)
+              .backgroundColor('#1E1E1E')
+              .border({ width: 1, color: this.theme.textSecondary })
+              .margin({ right: 12 })
+
+            Column() {
+              Text('深色模式')
+                .fontSize(16)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(this.theme.textPrimary)
+              Text('始终使用深色主题')
+                .fontSize(12)
+                .fontColor(this.theme.textSecondary)
+                .margin({ top: 2 })
+            }
+            .alignItems(HorizontalAlign.Start)
+            .layoutWeight(1)
+
+            if (this.darkModeSetting === 'dark') {
+              Text('✓')
+                .fontSize(22)
+                .fontColor(this.theme.primary)
+                .fontWeight(FontWeight.Bold)
+            }
+          }
+          .width('100%')
+          .padding(14)
+          .backgroundColor(this.darkModeSetting === 'dark' ? this.theme.card : this.theme.background)
+          .border({ width: this.darkModeSetting === 'dark' ? 2 : 0, color: this.theme.primary })
+          .borderRadius(12)
+          .stateStyles({
+            pressed: { .scale({ x: 0.98, y: 0.98 }) },
+            normal: { .scale({ x: 1, y: 1 }) }
+          })
+          .onClick(() => this.changeDarkModeSetting('dark'))
+        }
+        .width('100%')
+
+        Button('取消')
+          .width('60%')
+          .height(44)
+          .fontSize(15)
+          .fontWeight(FontWeight.Bold)
+          .backgroundColor(this.theme.background)
+          .fontColor(this.theme.textPrimary)
+          .borderRadius(22)
+          .margin({ top: 16 })
+          .onClick(() => {
+            this.showDarkModeDialog = false;
+          })
+      }
+      .width('80%')
+      .padding(24)
+      .backgroundColor(this.theme.card)
+      .borderRadius(20)
+      .shadow({
+        radius: 16,
+        color: this.theme.dialogShadow,
         offsetX: 0,
         offsetY: 8
       })
@@ -358,7 +536,7 @@ export struct MineTab {
       .borderRadius(20)
       .shadow({
         radius: 16,
-        color: 'rgba(0,0,0,0.2)',
+        color: this.theme.dialogShadow,
         offsetX: 0,
         offsetY: 8
       })
@@ -454,7 +632,7 @@ export struct MineTab {
       .borderRadius(20)
       .shadow({
         radius: 16,
-        color: 'rgba(0,0,0,0.2)',
+        color: this.theme.dialogShadow,
         offsetX: 0,
         offsetY: 8
       })
@@ -505,7 +683,7 @@ export struct MineTab {
 
           Text('应用偏好与信息')
             .fontSize(15)
-            .fontColor('rgba(255,255,255,0.85)')
+            .fontColor(this.theme.textOnPrimaryMuted)
         }
         .width('100%')
         .height(220)
@@ -571,7 +749,7 @@ export struct MineTab {
             this.showThemeDialog = true;
           })
 
-          // 深色模式切换
+          // 深色模式选择
           Row() {
             Text('🌙')
               .fontSize(26)
@@ -583,7 +761,7 @@ export struct MineTab {
                 .fontWeight(FontWeight.Medium)
                 .fontColor(this.theme.textPrimary)
 
-              Text(this.darkMode ? '已开启' : '已关闭')
+              Text(this.darkModeSettingLabel())
                 .fontSize(12)
                 .fontColor(this.theme.textSecondary)
                 .margin({ top: 2 })
@@ -591,12 +769,9 @@ export struct MineTab {
             .alignItems(HorizontalAlign.Start)
             .layoutWeight(1)
 
-            Toggle({ type: ToggleType.Switch, isOn: this.darkMode })
-              .width(48)
-              .height(28)
-              .onChange((isOn: boolean) => {
-                this.toggleDarkMode();
-              })
+            Text('›')
+              .fontSize(22)
+              .fontColor(this.theme.textSecondary)
           }
           .width('100%')
           .height(64)
@@ -604,9 +779,16 @@ export struct MineTab {
           .backgroundColor(this.theme.card)
           .borderRadius(16)
           .alignItems(VerticalAlign.Center)
+          .stateStyles({
+            pressed: { .scale({ x: 0.98, y: 0.98 }) },
+            normal: { .scale({ x: 1, y: 1 }) }
+          })
+          .onClick(() => {
+            this.showDarkModeDialog = true;
+          })
 
-          this.SettingItem('🧹', '清除数据', '清空所有本地记录', () => {
-            this.showClearDialog = true;
+          this.SettingItem('🗄️', '数据处理', '导出、导入或清除本地数据', () => {
+            this.pageStack.pushPath({ name: 'DataManage' });
           })
 
           this.SettingItem('🔒', '隐私政策', '查看用户协议与隐私政策', () => {
@@ -641,34 +823,9 @@ export struct MineTab {
         this.ThemeDialog()
       }
 
-      // 清除确认弹窗
-      if (this.showClearDialog) {
-        this.DialogOverlay(
-          '清除本地数据',
-          '确定要清空所有本地数据吗？这将清除答题进度、上次进度记录、答题历史、错题本、成就、收藏以及主题设置，且无法恢复。',
-          '取消',
-          '确定清除',
-          (): void => {
-            this.showClearDialog = false;
-          },
-          (): void => this.clearLocalData()
-        )
-      }
-
-      // 清除成功弹窗
-      if (this.showClearedDialog) {
-        this.DialogOverlay(
-          '清除成功',
-          '本地数据已清空。',
-          '',
-          '确定',
-          (): void => {
-            this.showClearedDialog = false;
-          },
-          (): void => {
-            this.showClearedDialog = false;
-          }
-        )
+      // 深色模式选择弹窗
+      if (this.showDarkModeDialog) {
+        this.DarkModeDialog()
       }
 
       // 关于弹窗

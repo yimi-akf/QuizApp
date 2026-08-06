@@ -36,12 +36,21 @@ export function difficultyColor(theme: AppTheme, difficulty: Difficulty | 'mixed
     case Difficulty.ENTRY: return theme.success;
     case Difficulty.ADVANCED: return theme.warning;
     case Difficulty.CHALLENGE: return theme.error;
-    case 'mixed': return '#9C27B0';
+    case 'mixed': return theme.difficultyMixedColor;
     default: return theme.primary;
   }
 }
 
-export function difficultyTagBgColor(difficulty: Difficulty | 'mixed'): string {
+export function difficultyTagBgColor(difficulty: Difficulty | 'mixed', darkMode: boolean = false): string {
+  if (darkMode) {
+    switch (difficulty) {
+      case Difficulty.ENTRY: return '#1B3D1B';
+      case Difficulty.ADVANCED: return '#3D2A1B';
+      case Difficulty.CHALLENGE: return '#3D1B1B';
+      case 'mixed': return '#2A1A3A';
+      default: return '#1A1A1A';
+    }
+  }
   switch (difficulty) {
     case Difficulty.ENTRY: return '#E8F5E9';
     case Difficulty.ADVANCED: return '#FFF3E0';

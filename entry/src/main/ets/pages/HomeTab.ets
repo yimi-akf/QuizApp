@@ -123,7 +123,7 @@ export struct HomeTab {
     })
     .shadow({
       radius: 10,
-      color: this.lastHomeModule === module ? `${this.theme.primary}33` : 'rgba(0,0,0,0.06)',
+      color: this.lastHomeModule === module ? `${this.theme.primary}33` : this.theme.cardShadow,
       offsetX: 0,
       offsetY: this.lastHomeModule === module ? 8 : 4
     })
@@ -219,7 +219,7 @@ export struct HomeTab {
           .borderRadius(20)
           .shadow({
             radius: 10,
-            color: 'rgba(0,0,0,0.06)',
+            color: this.theme.cardShadow,
             offsetX: 0,
             offsetY: 4
           })

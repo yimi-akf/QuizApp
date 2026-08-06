@@ -141,7 +141,10 @@ export struct WrongBookPage {
         }
         .width('100%')
         .padding({ top: 12, bottom: 20, left: 16, right: 16 })
-        .backgroundColor(this.theme.primary)
+        .linearGradient({
+          angle: 135,
+          colors: [[this.theme.primaryGradientStart, 0.0], [this.theme.primaryGradientEnd, 1.0]]
+        })
         .borderRadius({ bottomLeft: 28, bottomRight: 28 })
         .shadow({
           radius: 12,
@@ -251,7 +254,7 @@ export struct WrongBookPage {
     .borderRadius(16)
     .shadow({
       radius: 8,
-      color: 'rgba(0,0,0,0.06)',
+      color: this.theme.cardShadow,
       offsetX: 0,
       offsetY: 4
     })

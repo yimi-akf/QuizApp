@@ -261,7 +261,7 @@ export struct HistoryPage {
           .borderRadius(20)
           .shadow({
             radius: 16,
-            color: 'rgba(0,0,0,0.2)',
+            color: this.theme.dialogShadow,
             offsetX: 0,
             offsetY: 8
           })
@@ -273,7 +273,7 @@ export struct HistoryPage {
         .width('100%')
         .height('100%')
         .justifyContent(FlexAlign.Center)
-        .backgroundColor('rgba(0,0,0,0.5)')
+        .backgroundColor(this.theme.overlayScrim)
       }
     }
     .width('100%')
@@ -296,7 +296,7 @@ export struct HistoryPage {
             .fontWeight(FontWeight.Medium)
             .fontColor(difficultyColor(this.theme, record.difficulty))
             .padding({ left: 10, right: 10, top: 3, bottom: 3 })
-            .backgroundColor(difficultyTagBgColor(record.difficulty))
+            .backgroundColor(difficultyTagBgColor(record.difficulty, this.darkMode))
             .borderRadius(10)
         }
         .width('100%')
@@ -329,7 +329,7 @@ export struct HistoryPage {
     .borderRadius(16)
     .shadow({
       radius: 8,
-      color: 'rgba(0,0,0,0.06)',
+      color: this.theme.cardShadow,
       offsetX: 0,
       offsetY: 4
     })

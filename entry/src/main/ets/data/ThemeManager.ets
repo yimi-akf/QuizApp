@@ -1,13 +1,18 @@
 import dataPreferences from '@ohos.data.preferences';
 import common from '@ohos.app.ability.common';
+import { ConfigurationConstant } from '@kit.AbilityKit';
 import { AppTheme, DEFAULT_THEME_INDEX, THEMES, DARK_THEMES } from '../model/AppTheme';
 import hilog from '@ohos.hilog';
 
 const PREFERENCES_NAME = 'quiz_theme';
 const KEY_THEME_INDEX = 'theme_index';
 const APP_STORAGE_THEME_KEY = 'quizThemeIndex';
-const KEY_DARK_MODE = 'dark_mode';
-const APP_STORAGE_DARK_KEY = 'quizDarkMode';
+const KEY_DARK_MODE_SETTING = 'dark_mode_setting'; // 'system' | 'light' | 'dark'
+const APP_STORAGE_DARK_KEY = 'quizDarkMode'; // 实际生效的深色状态 boolean
+const APP_STORAGE_DARK_SETTING_KEY = 'quizDarkModeSetting'; // 用户设置的模式 string
+
+// 深色模式设置类型
+export type DarkModeSetting = 'system' | 'light' | 'dark';
 
 // 主题管理器：负责读取和保存当前主题索引
 export class ThemeManager {
@@ -62,10 +67,12 @@ export class ThemeManager {
     }
   }
 
-  // 将当前主题索引和暗色模式状态同步到 AppStorage，供跨页面监听
+  // 将当前主题索引和深色模式状态同步到 AppStorage
   static syncToAppStorage(context: common.UIAbilityContext): void {
     const index = ThemeManager.getThemeIndex(context);
     AppStorage.setOrCreate(APP_STORAGE_THEME_KEY, index);
+    const setting = ThemeManager.getDarkModeSetting(context);
+    AppStorage.setOrCreate(APP_STORAGE_DARK_SETTING_KEY, setting);
     const isDark = ThemeManager.isDarkMode(context);
     AppStorage.setOrCreate(APP_STORAGE_DARK_KEY, isDark);
   }
@@ -102,32 +109,71 @@ export class ThemeManager {
     }
   }
 
-  // 检查是否为暗色模式
-  static isDarkMode(context: common.UIAbilityContext): boolean {
+  // 获取深色模式设置（'system' | 'light' | 'dark'）
+  static getDarkModeSetting(context: common.UIAbilityContext): DarkModeSetting {
     const prefs = ThemeManager.getPreferences(context);
     if (!prefs) {
-      return false;
+      return 'system';
     }
     try {
-      return prefs.getSync(KEY_DARK_MODE, false) as boolean;
+      const value = prefs.getSync(KEY_DARK_MODE_SETTING, 'system') as string;
+      if (value === 'light' || value === 'dark' || value === 'system') {
+        return value as DarkModeSetting;
+      }
+      return 'system';
     } catch (e) {
-      hilog.error(0x0001, 'ThemeManager', 'isDarkMode failed');
-      return false;
+      return 'system';
     }
   }
 
-  // 保存暗色模式偏好
-  static saveDarkMode(context: common.UIAbilityContext, isDark: boolean): void {
+  // 保存深色模式设置
+  static saveDarkModeSetting(context: common.UIAbilityContext, setting: DarkModeSetting): void {
     const prefs = ThemeManager.getPreferences(context);
     if (!prefs) {
       return;
     }
     try {
-      prefs.putSync(KEY_DARK_MODE, isDark);
+      prefs.putSync(KEY_DARK_MODE_SETTING, setting);
       prefs.flushSync();
-      AppStorage.setOrCreate(APP_STORAGE_DARK_KEY, isDark);
+      AppStorage.setOrCreate(APP_STORAGE_DARK_SETTING_KEY, setting);
     } catch (e) {
-      hilog.error(0x0001, 'ThemeManager', 'saveDarkMode failed');
+      hilog.error(0x0001, 'ThemeManager', 'saveDarkModeSetting failed');
     }
+  }
+
+  // 检查是否为暗色模式（根据设置和系统状态计算实际是否深色）
+  static isDarkMode(context: common.UIAbilityContext): boolean {
+    const setting = ThemeManager.getDarkModeSetting(context);
+    if (setting === 'dark') {
+      return true;
+    }
+    if (setting === 'light') {
+      return false;
+    }
+    // system: 跟随系统
+    return ThemeManager.isSystemDarkMode(context);
+  }
+
+  // 读取系统当前是否深色模式
+  // 从 AppStorage 读取由 EntryAbility 记录的系统深色模式状态
+  static isSystemDarkMode(context: common.UIAbilityContext): boolean {
+    try {
+      const value = AppStorage.get<boolean>('systemDarkMode');
+      if (value !== undefined && value !== null) {
+        return value;
+      }
+    } catch (e) {
+      // ignore
+    }
+    // 回退：读取 context.config
+    try {
+      const config = context.config;
+      if (config && config.colorMode !== undefined) {
+        return config.colorMode === ConfigurationConstant.ColorMode.COLOR_MODE_DARK;
+      }
+    } catch (e) {
+      // ignore
+    }
+    return false;
   }
 }

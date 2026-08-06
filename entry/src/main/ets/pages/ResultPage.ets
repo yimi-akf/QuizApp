@@ -347,7 +347,10 @@ export struct ResultPage {
       .width('100%')
       .height(200)
       .justifyContent(FlexAlign.Center)
-      .backgroundColor(this.theme.primary)
+      .linearGradient({
+        angle: 135,
+        colors: [[this.theme.primaryGradientStart, 0.0], [this.theme.primaryGradientEnd, 1.0]]
+      })
       .borderRadius({ bottomLeft: 28, bottomRight: 28 })
       .shadow({
         radius: 12,

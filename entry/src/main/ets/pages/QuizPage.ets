@@ -1182,7 +1182,7 @@ export struct QuizPage {
 
   OptionCircleColor(index: number): string {
     if (!this.hasAnswered) {
-      return '#FFFFFF';
+      return this.theme.optionDefaultBg;
     }
     if (index === this.currentQuestion().correctIndex) {
       return this.theme.success;
@@ -1190,7 +1190,7 @@ export struct QuizPage {
     if (index === this.userAnswers[this.currentIndex]) {
       return this.theme.error;
     }
-    return '#FFFFFF';
+    return this.theme.optionDefaultBg;
   }
 
   OptionLabel(index: number): string {

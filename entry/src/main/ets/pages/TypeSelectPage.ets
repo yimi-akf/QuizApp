@@ -208,7 +208,7 @@ export struct TypeSelectPage {
     })
     .shadow({
       radius: 8,
-      color: 'rgba(0,0,0,0.06)',
+      color: this.theme.cardShadow,
       offsetX: 0,
       offsetY: 4
     })

@@ -13,6 +13,7 @@ import { AchievementPage } from './AchievementPage';
 import { StatsPage } from './StatsPage';
 import { DailyQuestionPage } from './DailyQuestionPage';
 import { HeatmapPage } from './HeatmapPage';
+import { DataManagePage } from './DataManagePage';
 import { HomeTab } from './HomeTab';
 import { FavoriteTab } from './FavoriteTab';
 import { MineTab } from './MineTab';
@@ -114,6 +115,12 @@ struct Index {
     } else if (name === 'Heatmap') {
       NavDestination() {
         HeatmapPage()
+      }
+      .hideTitleBar(true)
+      .backgroundColor(this.theme.background)
+    } else if (name === 'DataManage') {
+      NavDestination() {
+        DataManagePage()
       }
       .hideTitleBar(true)
       .backgroundColor(this.theme.background)

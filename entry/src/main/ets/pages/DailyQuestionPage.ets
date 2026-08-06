@@ -1,6 +1,8 @@
 import common from '@ohos.app.ability.common';
 import { findQuestionById } from '../data/QuestionBank';
 import { DailyStorage } from '../data/DailyStorage';
+import { HistoryStorage } from '../data/HistoryStorage';
+import { formatDateTime } from '../utils/DateUtil';
 import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
 import { ThemeManager } from '../data/ThemeManager';
 import { Question, QuestionType, Difficulty, Topic } from '../model/Question';
@@ -49,6 +51,8 @@ export struct DailyQuestionPage {
     const questionId = DailyStorage.getTodayQuestionId(context);
     const q = findQuestionById(questionId);
     this.question = q !== undefined ? q : EMPTY_QUESTION;
+    // 检查今天是否已完成，避免退出重进后重新显示题目
+    this.isCompleted = DailyStorage.isCompletedToday(context);
   }
 
   onOptionClick(index: number) {
@@ -64,6 +68,19 @@ export struct DailyQuestionPage {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     DailyStorage.markCompletedToday(context);
     this.isCompleted = true;
+
+    // 保存到历史记录，让热力图统计包含每日一题
+    HistoryStorage.saveRecord(context, {
+      id: Date.now(),
+      topic: this.question.topic,
+      difficulty: this.question.difficulty,
+      score: this.isCorrect ? 100 : 0,
+      correctCount: this.isCorrect ? 1 : 0,
+      total: 1,
+      answeredCount: 1,
+      elapsedSeconds: 0,
+      date: formatDateTime(new Date())
+    });
   }
 
   goBack() {
@@ -80,7 +97,7 @@ export struct DailyQuestionPage {
       Column() {
         Text('✦')
           .fontSize(44)
-          .fontColor(Color.White)
+          .fontColor(this.theme.textOnPrimary)
           .margin({ bottom: 8 })
 
         Text('每日一题')
@@ -161,24 +178,43 @@ export struct DailyQuestionPage {
                 .margin({ bottom: 24 })
 
               if (this.question.type === QuestionType.SHORT_ANSWER) {
-                Column() {
-                  Text('参考答案')
-                    .fontSize(15)
+                if (!this.hasAnswered) {
+                  Button('查看答案')
+                    .width(200)
+                    .height(52)
+                    .fontSize(17)
                     .fontWeight(FontWeight.Bold)
-                    .fontColor(this.theme.success)
-                    .width('100%')
-                    .margin({ bottom: 8 })
+                    .backgroundColor(this.theme.primary)
+                    .fontColor(this.theme.textOnPrimary)
+                    .borderRadius(26)
+                    .margin({ top: 8 })
+                    .stateStyles({
+                      pressed: { .scale({ x: 0.96, y: 0.96 }) },
+                      normal: { .scale({ x: 1, y: 1 }) }
+                    })
+                    .onClick(() => {
+                      this.hasAnswered = true;
+                    })
+                } else {
+                  Column() {
+                    Text('参考答案')
+                      .fontSize(15)
+                      .fontWeight(FontWeight.Bold)
+                      .fontColor(this.theme.success)
+                      .width('100%')
+                      .margin({ bottom: 8 })
 
-                  Text(this.question.explanation)
-                    .fontSize(15)
-                    .fontColor(this.theme.textPrimary)
-                    .width('100%')
-                    .lineHeight(24)
+                    Text(this.question.explanation)
+                      .fontSize(15)
+                      .fontColor(this.theme.textPrimary)
+                      .width('100%')
+                      .lineHeight(24)
+                  }
+                  .width('100%')
+                  .padding(16)
+                  .backgroundColor(this.theme.answerBg)
+                  .borderRadius(20)
                 }
-                .width('100%')
-                .padding(16)
-                .backgroundColor(this.theme.answerBg)
-                .borderRadius(20)
               } else {
                 ForEach(this.question.options, (option: string, index: number) => {
                   this.OptionItem(option, index)
@@ -359,7 +395,7 @@ export struct DailyQuestionPage {
 
   optionCircleColor(index: number): string {
     if (!this.hasAnswered) {
-      return '#FFFFFF';
+      return this.theme.optionDefaultBg;
     }
     if (index === this.question.correctIndex) {
       return this.theme.success;
@@ -367,6 +403,6 @@ export struct DailyQuestionPage {
     if (index === this.selectedIndex) {
       return this.theme.error;
     }
-    return '#FFFFFF';
+    return this.theme.optionDefaultBg;
   }
 }

@@ -21,13 +21,22 @@ export struct HeatmapPage {
   @State private headerOffset: number = -30;
   @State private contentOpacity: number = 0;
   @State private contentOffset: number = 40;
+  @State private levelColors: string[] = [];
 
-  private readonly LEVEL_COLORS: string[] = [
+  private readonly LIGHT_LEVEL_COLORS: string[] = [
     '#ebedf0',
     'rgba(25,118,210,0.2)',
     'rgba(25,118,210,0.4)',
     'rgba(25,118,210,0.6)',
     'rgba(25,118,210,0.85)'
+  ];
+
+  private readonly DARK_LEVEL_COLORS: string[] = [
+    'rgba(255,255,255,0.05)',
+    'rgba(100,181,246,0.2)',
+    'rgba(100,181,246,0.4)',
+    'rgba(100,181,246,0.65)',
+    'rgba(100,181,246,0.9)'
   ];
 
   private readonly WEEKDAY_LABELS: string[] = ['一', '二', '三', '四', '五', '六', '日'];
@@ -44,6 +53,7 @@ export struct HeatmapPage {
 
   aboutToAppear() {
     this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
+    this.levelColors = this.darkMode ? this.DARK_LEVEL_COLORS : this.LIGHT_LEVEL_COLORS;
     this.resetToCurrentMonth();
     this.loadData();
     this.headerOpacity = 1;
@@ -54,6 +64,7 @@ export struct HeatmapPage {
 
   onThemeChange() {
     this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
+    this.levelColors = this.darkMode ? this.DARK_LEVEL_COLORS : this.LIGHT_LEVEL_COLORS;
   }
 
   onPageShow() {
@@ -204,7 +215,7 @@ export struct HeatmapPage {
 
             Text(`${this.totalActiveDays} 天有打卡记录`)
               .fontSize(13)
-              .fontColor('rgba(255,255,255,0.8)')
+              .fontColor(this.theme.textOnPrimaryMuted)
               .margin({ top: 2 })
           }
           .alignItems(HorizontalAlign.Start)
@@ -292,13 +303,13 @@ export struct HeatmapPage {
                     Column() {
                       Text(String(cell.day))
                         .fontSize(13)
-                        .fontColor(cell.level! > 0 ? '#fff' : this.theme.textPrimary)
+                        .fontColor(cell.level! > 0 ? this.theme.textOnPrimary : this.theme.textPrimary)
                         .fontWeight(cell.level! > 0 ? FontWeight.Medium : FontWeight.Normal)
                     }
                     .width('100%')
                     .height(36)
                     .borderRadius(8)
-                    .backgroundColor(cell.level! > 0 ? this.LEVEL_COLORS[cell.level!] : Color.Transparent)
+                    .backgroundColor(cell.level! > 0 ? this.levelColors[cell.level!] : Color.Transparent)
                     .justifyContent(FlexAlign.Center)
                   }
                 }
@@ -332,7 +343,7 @@ export struct HeatmapPage {
               .margin({ right: 6 })
 
             Row({ space: 3 }) {
-              ForEach(this.LEVEL_COLORS, (color: string) => {
+              ForEach(this.levelColors, (color: string) => {
                 Column()
                   .width(14)
                   .height(14)

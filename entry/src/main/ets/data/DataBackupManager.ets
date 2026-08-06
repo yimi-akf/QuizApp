@@ -1,284 +1,211 @@
-import common from '@ohos.app.ability.common';
-import fs from '@ohos.file.fs';
 import dataPreferences from '@ohos.data.preferences';
+import common from '@ohos.app.ability.common';
+import picker from '@ohos.file.picker';
+import fileIo from '@ohos.file.fs';
 import util from '@ohos.util';
 import hilog from '@ohos.hilog';
+import { ThemeManager } from './ThemeManager';
 
+const TAG = 'DataBackupManager';
 const BACKUP_VERSION = 1;
-const BACKUP_DIR = 'backup';
-const MAX_BACKUP_FILES = 10;
 
-// 各 Storage 对应的 preferences 名称与 key
-const PREF_CONFIGS: { name: string; key: string }[] = [
-  { name: 'quiz_history', key: 'history_records' },
-  { name: 'quiz_progress', key: 'progress_data' },
-  { name: 'quiz_progress', key: 'last_progress' },
-  { name: 'quiz_progress', key: 'last_home_module' },
-  { name: 'quiz_wrong_book', key: 'wrong_records' },
-  { name: 'quiz_achievement', key: 'user_stats' },
-  { name: 'quiz_achievement', key: 'achievements' },
-  { name: 'quiz_favorite', key: 'favorite_questions' },
-  { name: 'quiz_feedback', key: 'question_feedback' },
-  { name: 'quiz_stats', key: 'topic_progress' },
-  { name: 'quiz_theme', key: 'theme_index' }
-];
+// 所有需要备份的 preferences 名称及其 key 列表
+const BACKUP_STORES: Record<string, string[]> = {
+  'quiz_theme': ['theme_index', 'dark_mode_setting'],
+  'quiz_progress': ['progress_data', 'last_progress', 'last_home_module'],
+  'quiz_history': ['history_records'],
+  'quiz_favorite': ['favorite_questions'],
+  'quiz_daily': ['daily_completed_today', 'daily_question_id', 'daily_completed_today_date'],
+  'quiz_wrong_book': ['wrong_records'],
+  'quiz_achievement': ['user_stats', 'achievements'],
+  'quiz_stats': ['topic_progress']
+};
 
-// 合法的 preferences 名称白名单，用于恢复时校验，防止外部备份注入未知键
-const VALID_PREF_NAMES = new Set<string>([
-  'quiz_history', 'quiz_progress', 'quiz_wrong_book',
-  'quiz_achievement', 'quiz_favorite', 'quiz_feedback', 'quiz_stats', 'quiz_theme'
-]);
-
-export interface BackupInfo {
-  fileName: string;
-  filePath: string;
-  size: number;
-  createTime: string;
+export interface BackupData {
+  version: number;
+  exportDate: string;
+  stores: Record<string, Record<string, string>>;
 }
 
-// 数据备份与恢复管理器
+export interface ValidationResult {
+  valid: boolean;
+  message: string;
+  backup: BackupData | null;
+}
+
+// 数据备份管理器：负责导出/导入所有本地数据
 export class DataBackupManager {
-  private static getBackupDir(context: common.UIAbilityContext): string {
-    return context.filesDir + '/' + BACKUP_DIR;
-  }
+  // 导出所有数据为 JSON 字符串
+  static async exportAllData(context: common.UIAbilityContext): Promise<string> {
+    const stores: Record<string, Record<string, string>> = {};
+    const storeNames: string[] = Object.keys(BACKUP_STORES);
 
-  // 确保备份目录存在
-  private static ensureBackupDir(context: common.UIAbilityContext): boolean {
-    const dir = DataBackupManager.getBackupDir(context);
-    try {
-      if (!fs.accessSync(dir)) {
-        fs.mkdirSync(dir);
-      }
-      return true;
-    } catch (e) {
-      hilog.error(0x0001, 'DataBackupManager', 'ensureBackupDir failed');
-      return false;
-    }
-  }
+    for (let i = 0; i < storeNames.length; i++) {
+      const storeName: string = storeNames[i];
+      const keys: string[] = BACKUP_STORES[storeName];
+      const storeData: Record<string, string> = {};
 
-  // 读取单个 preferences 的所有 key
-  private static readAllPreferences(context: common.UIAbilityContext): Record<string, string | number | boolean> {
-    const result: Record<string, string | number | boolean> = {};
-    const prefNameSet = new Set<string>();
-    PREF_CONFIGS.forEach(c => prefNameSet.add(c.name));
-
-    prefNameSet.forEach(prefName => {
       try {
-        const prefs = dataPreferences.getPreferencesSync(context, { name: prefName });
-        const keys = PREF_CONFIGS.filter(c => c.name === prefName).map(c => c.key);
-        keys.forEach(key => {
+        const prefs: dataPreferences.Preferences = dataPreferences.getPreferencesSync(context, { name: storeName });
+        for (let j = 0; j < keys.length; j++) {
+          const key: string = keys[j];
           try {
-            const value = prefs.getSync(key, '') as string | number | boolean;
-            result[`${prefName}:${key}`] = value;
+            const rawValue: dataPreferences.ValueType = prefs.getSync(key, '');
+            if (rawValue !== '' && rawValue !== undefined && rawValue !== null) {
+              storeData[key] = typeof rawValue === 'string' ? rawValue : JSON.stringify(rawValue);
+            }
           } catch (e) {
-            result[`${prefName}:${key}`] = '';
+            // key 不存在，跳过
           }
-        });
+        }
       } catch (e) {
-        // 忽略单个 preferences 错误
+        hilog.warn(0x0001, TAG, `Failed to read store: ${storeName}`);
       }
-    });
-    return result;
+
+      if (Object.keys(storeData).length > 0) {
+        stores[storeName] = storeData;
+      }
+    }
+
+    const backup: BackupData = {
+      version: BACKUP_VERSION,
+      exportDate: new Date().toISOString(),
+      stores: stores
+    };
+
+    return JSON.stringify(backup);
   }
 
-  // 导出备份
-  static exportBackup(context: common.UIAbilityContext): string | null {
-    if (!DataBackupManager.ensureBackupDir(context)) {
-      return null;
-    }
+  // 保存备份到文件（通过文件选择器）
+  static async saveBackupToFile(context: common.UIAbilityContext): Promise<boolean> {
     try {
-      const d = new Date();
-      const pad = (n: number) => String(n).padStart(2, '0');
-      const datePart = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
-      const timePart = `${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
-      const fileName = `quiz_backup_${datePart}_${timePart}.json`;
-      const filePath = DataBackupManager.getBackupDir(context) + '/' + fileName;
-
-      const backupData = {
-        version: BACKUP_VERSION,
-        exportedAt: d.toISOString(),
-        data: DataBackupManager.readAllPreferences(context)
+      const jsonData: string = await DataBackupManager.exportAllData(context);
+      const documentSaveOptions: picker.DocumentSaveOptions = {
+        newFileNames: [`QuizApp_Backup_${DataBackupManager.formatDate(new Date())}`],
+        fileSuffixChoices: ['.json']
       };
 
-      const file = fs.openSync(filePath, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-      try {
-        fs.writeSync(file.fd, JSON.stringify(backupData));
-      } finally {
-        fs.closeSync(file);
-      }
-
-      DataBackupManager.cleanupOldBackups(context);
-      return filePath;
-    } catch (e) {
-      hilog.error(0x0001, 'DataBackupManager', 'exportBackup failed');
-      return null;
-    }
-  }
-
-  // 清理旧备份，只保留最近 MAX_BACKUP_FILES 个
-  private static cleanupOldBackups(context: common.UIAbilityContext): void {
-    try {
-      const backups = DataBackupManager.listBackups(context);
-      if (backups.length > MAX_BACKUP_FILES) {
-        const toDelete = backups.slice(MAX_BACKUP_FILES);
-        toDelete.forEach(b => DataBackupManager.deleteBackup(b.filePath));
-      }
-    } catch (e) {
-      hilog.error(0x0001, 'DataBackupManager', 'cleanupOldBackups failed');
-    }
-  }
-
-  // 列出所有备份文件
-  static listBackups(context: common.UIAbilityContext): BackupInfo[] {
-    if (!DataBackupManager.ensureBackupDir(context)) {
-      return [];
-    }
-    try {
-      const dir = DataBackupManager.getBackupDir(context);
-      const list = fs.listFileSync(dir);
-      const backups: BackupInfo[] = [];
-      list.forEach(name => {
-        if (name.endsWith('.json')) {
-          const filePath = dir + '/' + name;
-          try {
-            const stat = fs.statSync(filePath);
-            backups.push({
-              fileName: name,
-              filePath,
-              size: stat.size,
-              createTime: new Date(stat.mtime * 1000).toISOString()
-            });
-          } catch (e) {
-            // 忽略单个文件错误
-          }
-        }
-      });
-      return backups.sort((a, b) => b.createTime.localeCompare(a.createTime));
-    } catch (e) {
-      hilog.error(0x0001, 'DataBackupManager', 'listBackups failed');
-      return [];
-    }
-  }
-
-  // 读取备份文件内容
-  static readBackup(filePath: string): object | null {
-    let file: fs.File | null = null;
-    try {
-      // 先获取文件大小，动态分配缓冲区，避免固定 1MB 截断导致数据损坏
-      const stat = fs.statSync(filePath);
-      const fileSize = stat.size;
-      if (fileSize <= 0) {
-        return null;
-      }
-      file = fs.openSync(filePath, fs.OpenMode.READ_ONLY);
-      const buf = new ArrayBuffer(fileSize);
-      const readLen = fs.readSync(file.fd, buf);
-      if (readLen !== fileSize) {
-        hilog.error(
-          0x0001,
-          'DataBackupManager',
-          'readBackup incomplete: read %{public}d of %{public}d',
-          readLen.toString(),
-          fileSize.toString()
-        );
-        return null;
-      }
-      // 用 TextDecoder 解码 UTF-8，替代逐字节拼接（性能从 O(n²) 降为 O(n)）
-      const textDecoder = new util.TextDecoder('utf-8');
-      const text = textDecoder.decodeToString(new Uint8Array(buf));
-      return JSON.parse(text);
-    } catch (e) {
-      hilog.error(0x0001, 'DataBackupManager', 'readBackup failed: %{public}s', JSON.stringify(e));
-      return null;
-    } finally {
-      if (file !== null) {
-        try {
-          fs.closeSync(file);
-        } catch (e) {
-          // 忽略关闭错误
-        }
-      }
-    }
-  }
-
-  // 从备份对象恢复数据
-  static restoreFromBackup(context: common.UIAbilityContext, backup: object): boolean {
-    try {
-      const b = backup as {
-        version: number;
-        data: Record<string, string | number | boolean>;
-      };
-      if (b.version !== BACKUP_VERSION) {
+      const documentViewPicker: picker.DocumentViewPicker = new picker.DocumentViewPicker(context);
+      const uris: string[] = await documentViewPicker.save(documentSaveOptions);
+      if (!uris || uris.length === 0) {
+        hilog.warn(0x0001, TAG, 'User cancelled save');
         return false;
       }
-      const grouped: Record<string, { key: string; value: string | number | boolean }[]> = {};
-      let skippedCount = 0;
-      Object.keys(b.data).forEach(compositeKey => {
-        // 校验 compositeKey 格式：必须是 "prefName:key" 且 prefName 在白名单内
-        const sepIndex = compositeKey.indexOf(':');
-        if (sepIndex <= 0) {
-          skippedCount++;
-          return;
-        }
-        const prefName = compositeKey.substring(0, sepIndex);
-        const key = compositeKey.substring(sepIndex + 1);
-        if (!VALID_PREF_NAMES.has(prefName) || key.length === 0) {
-          skippedCount++;
-          return;
-        }
-        if (!grouped[prefName]) {
-          grouped[prefName] = [];
-        }
-        grouped[prefName].push({ key, value: b.data[compositeKey] });
-      });
 
-      if (skippedCount > 0) {
-        hilog.warn(
-          0x0001,
-          'DataBackupManager',
-          'restoreFromBackup skipped %{public}d invalid keys',
-          skippedCount.toString()
-        );
+      const uri: string = uris[0];
+      const file: fileIo.File = fileIo.openSync(uri, fileIo.OpenMode.WRITE_ONLY | fileIo.OpenMode.CREATE);
+      fileIo.writeSync(file.fd, jsonData);
+      fileIo.closeSync(file);
+      hilog.info(0x0001, TAG, 'Backup saved successfully');
+      return true;
+    } catch (e) {
+      hilog.error(0x0001, TAG, `saveBackupToFile failed`);
+      return false;
+    }
+  }
+
+  // 从文件选择器读取备份文件
+  static async selectBackupFile(context: common.UIAbilityContext): Promise<string | null> {
+    try {
+      const documentSelectOptions: picker.DocumentSelectOptions = {
+        maxSelectNumber: 1,
+        fileSuffixFilters: ['.json']
+      };
+
+      const documentViewPicker: picker.DocumentViewPicker = new picker.DocumentViewPicker(context);
+      const uris: string[] = await documentViewPicker.select(documentSelectOptions);
+      if (!uris || uris.length === 0) {
+        hilog.warn(0x0001, TAG, 'User cancelled select');
+        return null;
       }
 
-      Object.keys(grouped).forEach(prefName => {
+      const uri: string = uris[0];
+      const file: fileIo.File = fileIo.openSync(uri, fileIo.OpenMode.READ_ONLY);
+      const stat: fileIo.Stat = fileIo.statSync(file.fd);
+      const buffer: ArrayBuffer = new ArrayBuffer(stat.size);
+      fileIo.readSync(file.fd, buffer);
+      fileIo.closeSync(file);
+
+      const decoder: util.TextDecoder = new util.TextDecoder('utf-8');
+      const content: string = decoder.decodeToString(new Uint8Array(buffer));
+      return content;
+    } catch (e) {
+      hilog.error(0x0001, TAG, `selectBackupFile failed`);
+      return null;
+    }
+  }
+
+  // 验证备份数据格式
+  static validateBackupData(data: string): ValidationResult {
+    try {
+      const parsed: BackupData = JSON.parse(data) as BackupData;
+      if (!parsed || typeof parsed !== 'object') {
+        const result: ValidationResult = { valid: false, message: '文件格式无效', backup: null };
+        return result;
+      }
+      if (!parsed.version || !parsed.stores || typeof parsed.stores !== 'object') {
+        const result: ValidationResult = { valid: false, message: '备份文件格式不正确，缺少必要字段', backup: null };
+        return result;
+      }
+      if (Object.keys(parsed.stores).length === 0) {
+        const result: ValidationResult = { valid: false, message: '备份文件内容为空', backup: null };
+        return result;
+      }
+      const result: ValidationResult = { valid: true, message: '验证通过', backup: parsed };
+      return result;
+    } catch (e) {
+      const result: ValidationResult = { valid: false, message: '文件解析失败，请确认是有效的备份文件', backup: null };
+      return result;
+    }
+  }
+
+  // 导入备份数据到所有 preferences
+  static importAllData(context: common.UIAbilityContext, backup: BackupData): boolean {
+    try {
+      const storeNames: string[] = Object.keys(backup.stores);
+      for (let i = 0; i < storeNames.length; i++) {
+        const storeName: string = storeNames[i];
+        const storeData: Record<string, string> = backup.stores[storeName];
         try {
-          const prefs = dataPreferences.getPreferencesSync(context, { name: prefName });
-          grouped[prefName].forEach(item => {
-            prefs.putSync(item.key, item.value);
-          });
+          const prefs: dataPreferences.Preferences = dataPreferences.getPreferencesSync(context, { name: storeName });
+          const keys: string[] = Object.keys(storeData);
+          for (let j = 0; j < keys.length; j++) {
+            const key: string = keys[j];
+            const value: string = storeData[key];
+            // theme_index 存为数字，其余按字符串处理
+            if (key === 'theme_index') {
+              prefs.putSync(key, Number(value));
+            } else {
+              prefs.putSync(key, value);
+            }
+          }
           prefs.flushSync();
         } catch (e) {
-          hilog.error(0x0001, 'DataBackupManager', 'restore preferences failed: %{public}s', JSON.stringify(e));
+          hilog.warn(0x0001, TAG, `Failed to write store: ${storeName}`);
         }
-      });
+      }
+
+      // 重新同步主题到 AppStorage
+      try {
+        ThemeManager.syncToAppStorage(context);
+      } catch (e) {
+        hilog.warn(0x0001, TAG, 'Failed to sync theme');
+      }
+
+      hilog.info(0x0001, TAG, 'Backup imported successfully');
       return true;
     } catch (e) {
-      hilog.error(0x0001, 'DataBackupManager', 'restoreFromBackup failed: %{public}s', JSON.stringify(e));
+      hilog.error(0x0001, TAG, `importAllData failed`);
       return false;
     }
   }
 
-  // 删除备份文件
-  static deleteBackup(filePath: string): boolean {
-    try {
-      fs.unlinkSync(filePath);
-      return true;
-    } catch (e) {
-      hilog.error(0x0001, 'DataBackupManager', 'deleteBackup failed');
-      return false;
-    }
-  }
-
-  // 清空所有备份文件（供"清空本地数据"调用）
-  static clearAllBackups(context: common.UIAbilityContext): void {
-    try {
-      const backups = DataBackupManager.listBackups(context);
-      backups.forEach(b => {
-        DataBackupManager.deleteBackup(b.filePath);
-      });
-    } catch (e) {
-      hilog.error(0x0001, 'DataBackupManager', 'clearAllBackups failed');
-    }
+  private static formatDate(date: Date): string {
+    const y: number = date.getFullYear();
+    const m: string = String(date.getMonth() + 1).padStart(2, '0');
+    const d: string = String(date.getDate()).padStart(2, '0');
+    const h: string = String(date.getHours()).padStart(2, '0');
+    const min: string = String(date.getMinutes()).padStart(2, '0');
+    return `${y}${m}${d}_${h}${min}`;
   }
 }

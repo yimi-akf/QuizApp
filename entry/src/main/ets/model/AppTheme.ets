@@ -29,6 +29,9 @@ export interface AppTheme {
   feedbackWrongBg: string;
   timerBg: string;
   timerWarningBg: string;
+  difficultyMixedColor: string;
+  cardShadow: string;
+  dialogShadow: string;
 }
 
 export const THEMES: AppTheme[] = [
@@ -60,7 +63,10 @@ export const THEMES: AppTheme[] = [
     feedbackCorrectBg: '#E8F5E9',
     feedbackWrongBg: '#FFF3E0',
     timerBg: '#E3F2FD',
-    timerWarningBg: '#FFEBEE'
+    timerWarningBg: '#FFEBEE',
+    difficultyMixedColor: '#9C27B0',
+    cardShadow: 'rgba(0,0,0,0.06)',
+    dialogShadow: 'rgba(0,0,0,0.2)'
   },
   {
     name: '清新绿',
@@ -90,7 +96,10 @@ export const THEMES: AppTheme[] = [
     feedbackCorrectBg: '#E8F5E9',
     feedbackWrongBg: '#FFF3E0',
     timerBg: '#E8F5E9',
-    timerWarningBg: '#FFEBEE'
+    timerWarningBg: '#FFEBEE',
+    difficultyMixedColor: '#9C27B0',
+    cardShadow: 'rgba(0,0,0,0.06)',
+    dialogShadow: 'rgba(0,0,0,0.2)'
   },
   {
     name: '浅紫色',
@@ -120,7 +129,10 @@ export const THEMES: AppTheme[] = [
     feedbackCorrectBg: '#E8F5E9',
     feedbackWrongBg: '#FFF3E0',
     timerBg: '#F3E5F5',
-    timerWarningBg: '#FFEBEE'
+    timerWarningBg: '#FFEBEE',
+    difficultyMixedColor: '#9C27B0',
+    cardShadow: 'rgba(0,0,0,0.06)',
+    dialogShadow: 'rgba(0,0,0,0.2)'
   },
   {
     name: '暖橙色',
@@ -150,7 +162,10 @@ export const THEMES: AppTheme[] = [
     feedbackCorrectBg: '#E8F5E9',
     feedbackWrongBg: '#FFF3E0',
     timerBg: '#FFF3E0',
-    timerWarningBg: '#FFEBEE'
+    timerWarningBg: '#FFEBEE',
+    difficultyMixedColor: '#9C27B0',
+    cardShadow: 'rgba(0,0,0,0.06)',
+    dialogShadow: 'rgba(0,0,0,0.2)'
   },
   {
     name: '玫瑰红',
@@ -180,7 +195,10 @@ export const THEMES: AppTheme[] = [
     feedbackCorrectBg: '#E8F5E9',
     feedbackWrongBg: '#FFF3E0',
     timerBg: '#FFEBF0',
-    timerWarningBg: '#FFEBEE'
+    timerWarningBg: '#FFEBEE',
+    difficultyMixedColor: '#9C27B0',
+    cardShadow: 'rgba(0,0,0,0.06)',
+    dialogShadow: 'rgba(0,0,0,0.2)'
   },
   {
     name: '深空灰',
@@ -210,7 +228,10 @@ export const THEMES: AppTheme[] = [
     feedbackCorrectBg: '#E8F5E9',
     feedbackWrongBg: '#FFF3E0',
     timerBg: '#ECEFF1',
-    timerWarningBg: '#FFEBEE'
+    timerWarningBg: '#FFEBEE',
+    difficultyMixedColor: '#9C27B0',
+    cardShadow: 'rgba(0,0,0,0.06)',
+    dialogShadow: 'rgba(0,0,0,0.2)'
   }
 ];
 
@@ -243,7 +264,10 @@ export const DARK_THEMES: AppTheme[] = [
     feedbackCorrectBg: '#1B3D1B',
     feedbackWrongBg: '#3D2A1B',
     timerBg: '#1A2A3A',
-    timerWarningBg: '#3D1B1B'
+    timerWarningBg: '#3D1B1B',
+    difficultyMixedColor: '#CE93D8',
+    cardShadow: 'rgba(0,0,0,0.20)',
+    dialogShadow: 'rgba(0,0,0,0.35)'
   },
   {
     name: '清新绿 (暗色)',
@@ -273,7 +297,10 @@ export const DARK_THEMES: AppTheme[] = [
     feedbackCorrectBg: '#1B3D1B',
     feedbackWrongBg: '#3D2A1B',
     timerBg: '#1B3A1B',
-    timerWarningBg: '#3D1B1B'
+    timerWarningBg: '#3D1B1B',
+    difficultyMixedColor: '#CE93D8',
+    cardShadow: 'rgba(0,0,0,0.20)',
+    dialogShadow: 'rgba(0,0,0,0.35)'
   },
   {
     name: '浅紫色 (暗色)',
@@ -303,7 +330,10 @@ export const DARK_THEMES: AppTheme[] = [
     feedbackCorrectBg: '#1B3D1B',
     feedbackWrongBg: '#3D2A1B',
     timerBg: '#2A1A3A',
-    timerWarningBg: '#3D1B1B'
+    timerWarningBg: '#3D1B1B',
+    difficultyMixedColor: '#CE93D8',
+    cardShadow: 'rgba(0,0,0,0.20)',
+    dialogShadow: 'rgba(0,0,0,0.35)'
   },
   {
     name: '暖橙色 (暗色)',
@@ -333,7 +363,10 @@ export const DARK_THEMES: AppTheme[] = [
     feedbackCorrectBg: '#1B3D1B',
     feedbackWrongBg: '#3D2A1B',
     timerBg: '#3A2A1A',
-    timerWarningBg: '#3D1B1B'
+    timerWarningBg: '#3D1B1B',
+    difficultyMixedColor: '#CE93D8',
+    cardShadow: 'rgba(0,0,0,0.20)',
+    dialogShadow: 'rgba(0,0,0,0.35)'
   },
   {
     name: '玫瑰红 (暗色)',
@@ -363,7 +396,10 @@ export const DARK_THEMES: AppTheme[] = [
     feedbackCorrectBg: '#1B3D1B',
     feedbackWrongBg: '#3D2A1B',
     timerBg: '#3A1A1A',
-    timerWarningBg: '#3D1B1B'
+    timerWarningBg: '#3D1B1B',
+    difficultyMixedColor: '#CE93D8',
+    cardShadow: 'rgba(0,0,0,0.20)',
+    dialogShadow: 'rgba(0,0,0,0.35)'
   },
   {
     name: '深空灰 (暗色)',
@@ -393,7 +429,10 @@ export const DARK_THEMES: AppTheme[] = [
     feedbackCorrectBg: '#1B3D1B',
     feedbackWrongBg: '#3D2A1B',
     timerBg: '#1A1A1A',
-    timerWarningBg: '#3D1B1B'
+    timerWarningBg: '#3D1B1B',
+    difficultyMixedColor: '#CE93D8',
+    cardShadow: 'rgba(0,0,0,0.20)',
+    dialogShadow: 'rgba(0,0,0,0.35)'
   }
 ];
 

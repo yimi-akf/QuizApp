@@ -1,4 +1,4 @@
-import common from '@ohos.app.ability.common';
+﻿import common from '@ohos.app.ability.common';
 import { Difficulty, Topic, QuizMode } from '../model/Question';
 import { QuizPageParams } from './QuizPage';
 import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';

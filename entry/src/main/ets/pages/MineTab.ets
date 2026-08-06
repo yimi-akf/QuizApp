@@ -1,4 +1,4 @@
-import common from '@ohos.app.ability.common';
+﻿import common from '@ohos.app.ability.common';
 import { ConfigurationConstant } from '@kit.AbilityKit';
 import { ThemeManager, DarkModeSetting } from '../data/ThemeManager';
 import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';

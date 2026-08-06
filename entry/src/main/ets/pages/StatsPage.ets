@@ -1,4 +1,4 @@
-import common from '@ohos.app.ability.common';
+﻿import common from '@ohos.app.ability.common';
 import { HistoryStorage, HistoryRecord } from '../data/HistoryStorage';
 import { StatsStorage, QuizStats, TopicProgress, DailyStat } from '../data/StatsStorage';
 import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';

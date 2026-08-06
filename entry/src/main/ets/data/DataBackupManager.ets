@@ -1,4 +1,4 @@
-import dataPreferences from '@ohos.data.preferences';
+﻿import dataPreferences from '@ohos.data.preferences';
 import common from '@ohos.app.ability.common';
 import picker from '@ohos.file.picker';
 import fileIo from '@ohos.file.fs';

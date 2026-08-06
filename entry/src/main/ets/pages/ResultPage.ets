@@ -1,4 +1,4 @@
-import common from '@ohos.app.ability.common';
+﻿import common from '@ohos.app.ability.common';
 import { findQuestionById } from '../data/QuestionBank';
 import { HistoryStorage, createHistoryRecord } from '../data/HistoryStorage';
 import { AchievementStorage } from '../data/AchievementStorage';

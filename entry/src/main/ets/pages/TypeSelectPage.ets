@@ -1,4 +1,4 @@
-import common from '@ohos.app.ability.common';
+﻿import common from '@ohos.app.ability.common';
 import { Topic } from '../model/Question';
 import { DifficultySelectParams } from './DifficultySelectPage';
 import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';

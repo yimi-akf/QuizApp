@@ -1,4 +1,4 @@
-import common from '@ohos.app.ability.common';
+﻿import common from '@ohos.app.ability.common';
 import { HistoryStorage, HistoryRecord } from '../data/HistoryStorage';
 import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
 import { popSafe } from '../utils/NavUtil';

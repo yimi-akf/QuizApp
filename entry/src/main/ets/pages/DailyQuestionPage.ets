@@ -1,4 +1,4 @@
-import common from '@ohos.app.ability.common';
+﻿import common from '@ohos.app.ability.common';
 import { findQuestionById } from '../data/QuestionBank';
 import { DailyStorage } from '../data/DailyStorage';
 import { HistoryStorage } from '../data/HistoryStorage';

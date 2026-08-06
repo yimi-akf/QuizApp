@@ -1,4 +1,4 @@
-import common from '@ohos.app.ability.common';
+﻿import common from '@ohos.app.ability.common';
 import { findQuestionById } from '../data/QuestionBank';
 import { WrongBookStorage, WrongRecord } from '../data/WrongBookStorage';
 import { Question, Topic, QuizMode } from '../model/Question';

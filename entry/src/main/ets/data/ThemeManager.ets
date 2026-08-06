@@ -1,4 +1,4 @@
-import dataPreferences from '@ohos.data.preferences';
+﻿import dataPreferences from '@ohos.data.preferences';
 import common from '@ohos.app.ability.common';
 import { ConfigurationConstant } from '@kit.AbilityKit';
 import { AppTheme, DEFAULT_THEME_INDEX, THEMES, DARK_THEMES } from '../model/AppTheme';

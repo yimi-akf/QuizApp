@@ -1,4 +1,4 @@
-// 应用主题定义
+﻿// 应用主题定义
 
 export interface AppTheme {
   name: string;

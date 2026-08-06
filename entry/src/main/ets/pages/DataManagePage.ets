@@ -1,4 +1,4 @@
-import common from '@ohos.app.ability.common';
+﻿import common from '@ohos.app.ability.common';
 import { ProgressStorage } from '../data/ProgressStorage';
 import { HistoryStorage } from '../data/HistoryStorage';
 import { WrongBookStorage } from '../data/WrongBookStorage';

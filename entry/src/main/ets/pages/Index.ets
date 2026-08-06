@@ -1,4 +1,4 @@
-import common from '@ohos.app.ability.common';
+﻿import common from '@ohos.app.ability.common';
 import curves from '@ohos.curves';
 import { ThemeManager } from '../data/ThemeManager';
 import { DailyStorage } from '../data/DailyStorage';

@@ -1,4 +1,4 @@
-import common from '@ohos.app.ability.common';
+﻿import common from '@ohos.app.ability.common';
 import { FavoriteStorage, FavoriteRecord } from '../data/FavoriteStorage';
 import { findQuestionById } from '../data/QuestionBank';
 import { ThemeManager } from '../data/ThemeManager';

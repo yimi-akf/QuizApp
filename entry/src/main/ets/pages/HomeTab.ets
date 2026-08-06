@@ -1,4 +1,4 @@
-import common from '@ohos.app.ability.common';
+﻿import common from '@ohos.app.ability.common';
 import { ProgressStorage, LastProgressSummary } from '../data/ProgressStorage';
 import { ThemeManager } from '../data/ThemeManager';
 import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';

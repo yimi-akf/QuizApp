@@ -1,4 +1,4 @@
-// 格式化与标签工具函数
+﻿// 格式化与标签工具函数
 
 import { Difficulty, Topic, QuestionType } from '../model/Question';
 import { AppTheme } from '../model/AppTheme';

@@ -1,4 +1,4 @@
-import common from '@ohos.app.ability.common';
+﻿import common from '@ohos.app.ability.common';
 import { questionBank, findQuestionById } from '../data/QuestionBank';
 import { ProgressStorage, ProgressInfo } from '../data/ProgressStorage';
 import { Difficulty, Question, QuestionType, Topic, QuizMode } from '../model/Question';

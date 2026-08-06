@@ -1,4 +1,4 @@
-﻿import common from '@ohos.app.ability.common';
+import common from '@ohos.app.ability.common';
 import { FavoriteStorage, FavoriteRecord } from '../data/FavoriteStorage';
 import { findQuestionById } from '../data/QuestionBank';
 import { ThemeManager } from '../data/ThemeManager';
@@ -35,7 +35,7 @@ class TopicGroupData {
 @Component
 export struct FavoriteTab {
   @Consume('pageStack') pageStack: NavPathStack
-  @StorageLink('quizThemeIndex') @Watch('onThemeIndexChange') themeIndex: number = 0;
+  @StorageLink('quizThemeIndex') @Watch('onThemeChange') themeIndex: number = 0;
   @StorageLink('quizDarkMode') @Watch('onThemeChange') darkMode: boolean = false;
   @State theme: AppTheme = THEMES[0];
   @State favorites: FavoriteRecord[] = [];
@@ -52,10 +52,6 @@ export struct FavoriteTab {
     this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
     this.loadData(context);
     this.playEntranceAnimation();
-  }
-
-  onThemeIndexChange() {
-    this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
   }
 
   onThemeChange() {
@@ -201,7 +197,7 @@ export struct FavoriteTab {
           .fontColor(this.theme.textOnPrimary)
           .textShadow({
             radius: 10,
-            color: 'rgba(0,0,0,0.15)',
+            color: this.theme.cardShadow,
             offsetX: 0,
             offsetY: 4
           })
@@ -223,7 +219,7 @@ export struct FavoriteTab {
       .borderRadius({ bottomLeft: 28, bottomRight: 28 })
       .shadow({
         radius: 12,
-        color: 'rgba(0,0,0,0.12)',
+        color: this.theme.cardShadow,
         offsetX: 0,
         offsetY: 6
       })

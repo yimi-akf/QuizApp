@@ -1,4 +1,4 @@
-﻿import common from '@ohos.app.ability.common';
+import common from '@ohos.app.ability.common';
 import { HistoryRecord, HistoryStorage } from '../data/HistoryStorage';
 import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
 import { ThemeManager } from '../data/ThemeManager';
@@ -20,6 +20,8 @@ export struct HistoryPage {
   @State listOpacity: number = 0
   @State listOffset: number = 40
   @State footerOpacity: number = 0
+  // 监听来自 NavDestination.onBackPressed 的信号
+  @StorageLink('historyPageBackPress') @Watch('onBackPressSignal') backPressSignal: number = 0;
 
   aboutToAppear() {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
@@ -65,6 +67,14 @@ export struct HistoryPage {
     return false
   }
 
+  // NavDestination.onBackPressed 信号处理：弹窗打开时关闭弹窗并拦截返回
+  onBackPressSignal() {
+    if (this.showClearDialog) {
+      this.showClearDialog = false;
+      AppStorage.setOrCreate('historyPageBackPressHandled', Date.now());
+    }
+  }
+
   build() {
     Stack() {
       Column() {
@@ -78,7 +88,7 @@ export struct HistoryPage {
               .height(44)
               .textAlign(TextAlign.Center)
               .borderRadius(22)
-              .backgroundColor('rgba(255,255,255,0.15)')
+              .backgroundColor(this.theme.glassBg)
               .onClick(() => this.goBack())
 
             Blank()
@@ -99,7 +109,7 @@ export struct HistoryPage {
               .fontColor(this.theme.textOnPrimary)
               .textShadow({
                 radius: 10,
-                color: 'rgba(0,0,0,0.15)',
+                color: this.theme.cardShadow,
                 offsetX: 0,
                 offsetY: 4
               })
@@ -127,7 +137,7 @@ export struct HistoryPage {
         .borderRadius({ bottomLeft: 28, bottomRight: 28 })
         .shadow({
           radius: 12,
-          color: 'rgba(0,0,0,0.12)',
+          color: this.theme.cardShadow,
           offsetX: 0,
           offsetY: 6
         })
@@ -296,7 +306,7 @@ export struct HistoryPage {
             .fontWeight(FontWeight.Medium)
             .fontColor(difficultyColor(this.theme, record.difficulty))
             .padding({ left: 10, right: 10, top: 3, bottom: 3 })
-            .backgroundColor(difficultyTagBgColor(record.difficulty, this.darkMode))
+            .backgroundColor(difficultyTagBgColor(record.difficulty, this.theme))
             .borderRadius(10)
         }
         .width('100%')

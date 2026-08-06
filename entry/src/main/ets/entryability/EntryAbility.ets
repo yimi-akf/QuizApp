@@ -1,4 +1,4 @@
-﻿import { AbilityConstant, ConfigurationConstant, UIAbility, Want, Configuration } from '@kit.AbilityKit';
+import { AbilityConstant, ConfigurationConstant, UIAbility, Want, Configuration } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
 import { ThemeManager } from '../data/ThemeManager';
@@ -12,8 +12,12 @@ export default class EntryAbility extends UIAbility {
   private cachedSetting: string = 'system';
 
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
-    // 初始化缓存
-    this.cachedSetting = ThemeManager.getDarkModeSetting(this.context);
+    try {
+      this.cachedSetting = ThemeManager.getDarkModeSetting(this.context);
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, 'getDarkModeSetting failed: %{public}s', JSON.stringify(e));
+      this.cachedSetting = 'system';
+    }
     this.applyDarkMode();
     hilog.info(DOMAIN, TAG, '%{public}s', 'Ability onCreate');
   }
@@ -46,7 +50,7 @@ export default class EntryAbility extends UIAbility {
     this.isApplyingColorMode = true;
     try {
       const setting = this.cachedSetting;
-      let isDark: boolean;
+      let isDark: boolean = false;
 
       if (setting === 'dark') {
         isDark = true;

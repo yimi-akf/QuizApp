@@ -62,7 +62,8 @@ export class DailyStorage {
     }
     const total = questionBank.length;
     if (total === 0) {
-      return 0;
+      // 题库为空时返回 -1，上层 findQuestionById 会返回 undefined，由 EMPTY_QUESTION 兜底
+      return -1;
     }
     const idx = Math.abs(hash) % total;
     return questionBank[idx].id;

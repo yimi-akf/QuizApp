@@ -89,7 +89,7 @@ export class ProgressStorage {
         topic: progress.topic,
         difficulty: progress.difficulty,
         currentIndex: progress.currentIndex,
-        total: progress.userAnswers.length
+        total: progress.questionIds.length
       };
       prefs.putSync(KEY_LAST_PROGRESS, JSON.stringify(summary));
       prefs.flushSync();

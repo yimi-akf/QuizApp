@@ -3,6 +3,7 @@ import { findQuestionById } from '../data/QuestionBank';
 import { DailyStorage } from '../data/DailyStorage';
 import { HistoryStorage } from '../data/HistoryStorage';
 import { formatDateTime } from '../utils/DateUtil';
+import { popSafe } from '../utils/NavUtil';
 import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
 import { ThemeManager } from '../data/ThemeManager';
 import { Question, QuestionType, Difficulty, Topic } from '../model/Question';
@@ -29,12 +30,13 @@ export struct DailyQuestionPage {
   @State selectedIndex: number = -1;
   @State isCorrect: boolean = false;
   @State isCompleted: boolean = false;
+  @State hasSelfAssessed: boolean = false;
   @State headerOpacity: number = 0;
   @State cardOpacity: number = 0;
   @State cardOffset: number = 30;
+  @StorageLink('dataClearedSignal') @Watch('onDataCleared') dataClearedSignal: number = 0;
 
   aboutToAppear() {
-    const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
     this.loadQuestion();
     this.headerOpacity = 1;
@@ -44,6 +46,17 @@ export struct DailyQuestionPage {
 
   onThemeChange() {
     this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
+  }
+
+  onDataCleared() {
+    if (this.dataClearedSignal > 0) {
+      const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
+      this.isCompleted = DailyStorage.isCompletedToday(context);
+      this.hasAnswered = false;
+      this.selectedIndex = -1;
+      this.isCorrect = false;
+      this.hasSelfAssessed = false;
+    }
   }
 
   loadQuestion() {
@@ -74,8 +87,8 @@ export struct DailyQuestionPage {
       id: Date.now(),
       topic: this.question.topic,
       difficulty: this.question.difficulty,
-      score: this.isCorrect ? 100 : 0,
-      correctCount: this.isCorrect ? 1 : 0,
+      score: (this.question.type === QuestionType.SHORT_ANSWER ? this.hasSelfAssessed && this.isCorrect : this.isCorrect) ? 100 : 0,
+      correctCount: (this.question.type === QuestionType.SHORT_ANSWER ? this.hasSelfAssessed && this.isCorrect : this.isCorrect) ? 1 : 0,
       total: 1,
       answeredCount: 1,
       elapsedSeconds: 0,
@@ -84,11 +97,7 @@ export struct DailyQuestionPage {
   }
 
   goBack() {
-    try {
-      this.pageStack.pop();
-    } catch (e) {
-      // ignore
-    }
+    popSafe(this.pageStack);
   }
 
   build() {
@@ -106,7 +115,7 @@ export struct DailyQuestionPage {
           .fontColor(this.theme.textOnPrimary)
           .textShadow({
             radius: 10,
-            color: 'rgba(0,0,0,0.15)',
+            color: this.theme.cardShadow,
             offsetX: 0,
             offsetY: 4
           })
@@ -128,7 +137,7 @@ export struct DailyQuestionPage {
       .borderRadius({ bottomLeft: 28, bottomRight: 28 })
       .shadow({
         radius: 12,
-        color: 'rgba(0,0,0,0.12)',
+        color: this.theme.cardShadow,
         offsetX: 0,
         offsetY: 6
       })
@@ -209,6 +218,34 @@ export struct DailyQuestionPage {
                       .fontColor(this.theme.textPrimary)
                       .width('100%')
                       .lineHeight(24)
+
+                    Row({ space: 12 }) {
+                      Button('答错了')
+                        .layoutWeight(1)
+                        .height(44)
+                        .fontSize(15)
+                        .backgroundColor(this.theme.background)
+                        .fontColor(this.theme.error)
+                        .borderRadius(22)
+                        .border({ width: 1.5, color: this.theme.error })
+                        .onClick(() => {
+                          this.isCorrect = false;
+                          this.hasSelfAssessed = true;
+                        })
+                      Button('答对了')
+                        .layoutWeight(1)
+                        .height(44)
+                        .fontSize(15)
+                        .backgroundColor(this.theme.success)
+                        .fontColor(this.theme.textOnPrimary)
+                        .borderRadius(22)
+                        .onClick(() => {
+                          this.isCorrect = true;
+                          this.hasSelfAssessed = true;
+                        })
+                    }
+                    .width('100%')
+                    .margin({ top: 12 })
                   }
                   .width('100%')
                   .padding(16)
@@ -264,7 +301,7 @@ export struct DailyQuestionPage {
         Row({ space: 12 }) {
           if (!this.hasAnswered) {
             // 还未作答，无按钮
-          } else if (this.hasAnswered && !this.isCompleted) {
+          } else if (this.hasAnswered && (this.question.type !== QuestionType.SHORT_ANSWER || this.hasSelfAssessed) && !this.isCompleted) {
             Button('完成打卡 ›')
               .layoutWeight(1)
               .height(52)

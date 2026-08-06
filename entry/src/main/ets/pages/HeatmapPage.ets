@@ -1,4 +1,4 @@
-﻿import common from '@ohos.app.ability.common';
+import common from '@ohos.app.ability.common';
 import { HistoryStorage, HistoryRecord } from '../data/HistoryStorage';
 import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
 import { popSafe } from '../utils/NavUtil';
@@ -23,37 +23,40 @@ export struct HeatmapPage {
   @State private contentOffset: number = 40;
   @State private levelColors: string[] = [];
 
-  private readonly LIGHT_LEVEL_COLORS: string[] = [
-    '#ebedf0',
-    'rgba(25,118,210,0.2)',
-    'rgba(25,118,210,0.4)',
-    'rgba(25,118,210,0.6)',
-    'rgba(25,118,210,0.85)'
-  ];
-
-  private readonly DARK_LEVEL_COLORS: string[] = [
-    'rgba(255,255,255,0.05)',
-    'rgba(100,181,246,0.2)',
-    'rgba(100,181,246,0.4)',
-    'rgba(100,181,246,0.65)',
-    'rgba(100,181,246,0.9)'
-  ];
-
   private readonly WEEKDAY_LABELS: string[] = ['一', '二', '三', '四', '五', '六', '日'];
   private readonly MIN_YEAR = 2026;
-  private readonly MAX_YEAR = 2026;
 
-  private context: common.UIAbilityContext = this.getUIContext().getHostContext() as common.UIAbilityContext;
+  private context: common.UIAbilityContext | null = null;
+
+  // 将主题色 hex 转为带透明度的 rgba 字符串
+  private hexToRgba(hex: string, alpha: number): string {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+
+  // 根据当前主题动态生成热力图等级色板
+  private buildLevelColors(): string[] {
+    return [
+      this.theme.divider,
+      this.hexToRgba(this.theme.primary, 0.2),
+      this.hexToRgba(this.theme.primary, 0.4),
+      this.hexToRgba(this.theme.primary, 0.6),
+      this.hexToRgba(this.theme.primary, 0.85)
+    ];
+  }
 
   private resetToCurrentMonth() {
     const now = new Date();
-    this.currentYear = Math.max(this.MIN_YEAR, Math.min(this.MAX_YEAR, now.getFullYear()));
+    this.currentYear = Math.max(this.MIN_YEAR, now.getFullYear());
     this.currentMonth = now.getMonth() + 1;
   }
 
   aboutToAppear() {
+    this.context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
-    this.levelColors = this.darkMode ? this.DARK_LEVEL_COLORS : this.LIGHT_LEVEL_COLORS;
+    this.levelColors = this.buildLevelColors();
     this.resetToCurrentMonth();
     this.loadData();
     this.headerOpacity = 1;
@@ -64,15 +67,16 @@ export struct HeatmapPage {
 
   onThemeChange() {
     this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
-    this.levelColors = this.darkMode ? this.DARK_LEVEL_COLORS : this.LIGHT_LEVEL_COLORS;
+    this.levelColors = this.buildLevelColors();
   }
 
   onPageShow() {
-    this.resetToCurrentMonth();
+    // 仅刷新数据，不重置月份位置（保留用户查看的月份）
     this.loadData();
   }
 
   loadData() {
+    if (!this.context) return;
     const records = HistoryStorage.loadRecords(this.context);
     const counts = new Map<string, number>();
     let max = 0;
@@ -168,13 +172,16 @@ export struct HeatmapPage {
   }
 
   nextMonth() {
+    // 不允许导航到未来月份（当前月份为上限）
+    const now = new Date();
+    const curYear = now.getFullYear();
+    const curMonth = now.getMonth() + 1;
+    if (this.currentYear > curYear || (this.currentYear === curYear && this.currentMonth >= curMonth)) {
+      return;
+    }
     if (this.currentMonth === 12) {
-      if (this.currentYear < this.MAX_YEAR) {
-        this.currentYear++;
-        this.currentMonth = 1;
-      } else {
-        return;
-      }
+      this.currentYear++;
+      this.currentMonth = 1;
     } else {
       this.currentMonth++;
     }
@@ -208,7 +215,7 @@ export struct HeatmapPage {
               .fontColor(this.theme.textOnPrimary)
               .textShadow({
                 radius: 8,
-                color: 'rgba(0,0,0,0.12)',
+                color: this.theme.cardShadow,
                 offsetX: 0,
                 offsetY: 3
               })
@@ -235,7 +242,7 @@ export struct HeatmapPage {
       .borderRadius({ bottomLeft: 28, bottomRight: 28 })
       .shadow({
         radius: 12,
-        color: 'rgba(0,0,0,0.12)',
+        color: this.theme.cardShadow,
         offsetX: 0,
         offsetY: 6
       })

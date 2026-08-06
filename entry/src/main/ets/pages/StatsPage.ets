@@ -1,4 +1,4 @@
-﻿import common from '@ohos.app.ability.common';
+import common from '@ohos.app.ability.common';
 import { HistoryStorage, HistoryRecord } from '../data/HistoryStorage';
 import { StatsStorage, QuizStats, TopicProgress, DailyStat } from '../data/StatsStorage';
 import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
@@ -83,7 +83,7 @@ export struct StatsPage {
               .height(44)
               .textAlign(TextAlign.Center)
               .borderRadius(22)
-              .backgroundColor('rgba(255,255,255,0.15)')
+              .backgroundColor(this.theme.glassBg)
               .onClick(() => this.goBack())
 
             Blank()
@@ -117,7 +117,7 @@ export struct StatsPage {
         .borderRadius({ bottomLeft: 28, bottomRight: 28 })
         .shadow({
           radius: 12,
-          color: 'rgba(0,0,0,0.12)',
+          color: this.theme.cardShadow,
           offsetX: 0,
           offsetY: 6
         })

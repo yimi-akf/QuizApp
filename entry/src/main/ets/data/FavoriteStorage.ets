@@ -39,8 +39,8 @@ export class FavoriteStorage {
         return [];
       }
       // 兼容旧数据：为没有 groupId 的记录补上默认分组
-      return parsed.map(r => {
-        if (r.groupId === undefined) {
+      return parsed.filter(r => r && r.questionId !== undefined).map(r => {
+        if (r.groupId === undefined || r.groupId === null) {
           return {
             questionId: r.questionId,
             addedAt: r.addedAt,

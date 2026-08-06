@@ -1,4 +1,4 @@
-﻿import common from '@ohos.app.ability.common';
+import common from '@ohos.app.ability.common';
 import { Difficulty, Topic, QuizMode } from '../model/Question';
 import { QuizPageParams } from './QuizPage';
 import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
@@ -12,8 +12,8 @@ export interface DifficultySelectParams {
 @Component
 export struct DifficultySelectPage {
   @Consume('pageStack') pageStack: NavPathStack
-  @StorageLink('quizThemeIndex') @Watch('onThemeIndexChange') themeIndex: number = 0;
-  @StorageLink('quizDarkMode') @Watch('onThemeIndexChange') darkMode: boolean = false;
+  @StorageLink('quizThemeIndex') @Watch('onThemeChange') themeIndex: number = 0;
+  @StorageLink('quizDarkMode') @Watch('onThemeChange') darkMode: boolean = false;
   @State theme: AppTheme = THEMES[0];
   public topic: Topic = Topic.KNOWLEDGE;
   @State selectedDifficulty: Difficulty | 'mixed' | null = null;
@@ -39,7 +39,7 @@ export struct DifficultySelectPage {
     this.btnScale = 1
   }
 
-  onThemeIndexChange() {
+  onThemeChange() {
     this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
   }
 
@@ -51,7 +51,7 @@ export struct DifficultySelectPage {
           Circle()
             .width(72)
             .height(72)
-            .fill('rgba(255,255,255,0.15)')
+            .fill(this.theme.glassBg)
 
           Text('◎')
             .fontSize(34)
@@ -65,7 +65,7 @@ export struct DifficultySelectPage {
           .fontColor(this.theme.textOnPrimary)
           .textShadow({
             radius: 10,
-            color: 'rgba(0,0,0,0.15)',
+            color: this.theme.cardShadow,
             offsetX: 0,
             offsetY: 4
           })
@@ -92,7 +92,7 @@ export struct DifficultySelectPage {
       .borderRadius({ bottomLeft: 28, bottomRight: 28 })
       .shadow({
         radius: 12,
-        color: 'rgba(0,0,0,0.12)',
+        color: this.theme.cardShadow,
         offsetX: 0,
         offsetY: 6
       })

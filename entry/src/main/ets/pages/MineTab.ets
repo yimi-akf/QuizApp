@@ -1,4 +1,4 @@
-﻿import common from '@ohos.app.ability.common';
+import common from '@ohos.app.ability.common';
 import { ConfigurationConstant } from '@kit.AbilityKit';
 import { ThemeManager, DarkModeSetting } from '../data/ThemeManager';
 import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
@@ -9,9 +9,9 @@ import hilog from '@ohos.hilog';
 @Component
 export struct MineTab {
   @Consume('pageStack') pageStack: NavPathStack
-  @StorageLink('quizThemeIndex') @Watch('onThemeIndexChange') themeIndex: number = 0;
-  @StorageLink('quizDarkMode') @Watch('onThemeIndexChange') darkMode: boolean = false;
-  @StorageLink('quizDarkModeSetting') @Watch('onThemeIndexChange') darkModeSetting: string = 'system';
+  @StorageLink('quizThemeIndex') @Watch('onThemeChange') themeIndex: number = 0;
+  @StorageLink('quizDarkMode') @Watch('onThemeChange') darkMode: boolean = false;
+  @StorageLink('quizDarkModeSetting') @Watch('onThemeChange') darkModeSetting: string = 'system';
   @State theme: AppTheme = THEMES[0];
   @State currentThemeName: string = THEMES[0].name;
   @State headerOpacity: number = 0;
@@ -42,7 +42,7 @@ export struct MineTab {
     this.currentThemeName = this.theme.name;
   }
 
-  onThemeIndexChange() {
+  onThemeChange() {
     this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
     this.currentThemeName = this.theme.name;
   }
@@ -338,7 +338,7 @@ export struct MineTab {
               .width(24)
               .height(24)
               .borderRadius(12)
-              .backgroundColor('#607D8B')
+              .backgroundColor(this.theme.tabInactive)
               .margin({ right: 12 })
 
             Column() {
@@ -378,7 +378,7 @@ export struct MineTab {
               .width(24)
               .height(24)
               .borderRadius(12)
-              .backgroundColor('#FFD54F')
+              .backgroundColor(this.theme.warning)
               .margin({ right: 12 })
 
             Column() {
@@ -418,7 +418,7 @@ export struct MineTab {
               .width(24)
               .height(24)
               .borderRadius(12)
-              .backgroundColor('#1E1E1E')
+              .backgroundColor(this.darkMode ? this.theme.surface : this.theme.textPrimary)
               .border({ width: 1, color: this.theme.textSecondary })
               .margin({ right: 12 })
 
@@ -675,7 +675,7 @@ export struct MineTab {
             .fontColor(this.theme.textOnPrimary)
             .textShadow({
               radius: 10,
-              color: 'rgba(0,0,0,0.15)',
+              color: this.theme.cardShadow,
               offsetX: 0,
               offsetY: 4
             })
@@ -697,7 +697,7 @@ export struct MineTab {
         .borderRadius({ bottomLeft: 28, bottomRight: 28 })
         .shadow({
           radius: 12,
-          color: 'rgba(0,0,0,0.12)',
+          color: this.theme.cardShadow,
           offsetX: 0,
           offsetY: 6
         })

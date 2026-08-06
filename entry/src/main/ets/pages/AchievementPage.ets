@@ -1,7 +1,6 @@
-﻿import common from '@ohos.app.ability.common';
+import common from '@ohos.app.ability.common';
 import { AchievementStorage, Achievement, UserStats } from '../data/AchievementStorage';
 import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
-import { ThemeManager } from '../data/ThemeManager';
 import { popSafe } from '../utils/NavUtil';
 
 // 成就页
@@ -19,7 +18,6 @@ export struct AchievementPage {
   @State listOffset: number = 40;
 
   aboutToAppear() {
-    const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
     this.loadData();
 
@@ -60,7 +58,7 @@ export struct AchievementPage {
               .height(44)
               .textAlign(TextAlign.Center)
               .borderRadius(22)
-              .backgroundColor('rgba(255,255,255,0.15)')
+              .backgroundColor(this.theme.glassBg)
               .onClick(() => this.goBack())
 
             Blank()
@@ -99,7 +97,7 @@ export struct AchievementPage {
         .borderRadius({ bottomLeft: 28, bottomRight: 28 })
         .shadow({
           radius: 12,
-          color: 'rgba(0,0,0,0.12)',
+          color: this.theme.cardShadow,
           offsetX: 0,
           offsetY: 6
         })
@@ -128,7 +126,7 @@ export struct AchievementPage {
 
             ForEach(this.achievements, (item: Achievement) => {
               this.AchievementItem(item)
-            }, (item: Achievement) => item.id)
+            }, (item: Achievement) => item.id + '_' + (item.unlockedAt || ''))
           }
           .width('100%')
           .padding({ left: 24, right: 24, bottom: 24 })

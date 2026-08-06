@@ -1,4 +1,4 @@
-﻿import common from '@ohos.app.ability.common';
+import common from '@ohos.app.ability.common';
 import { findQuestionById } from '../data/QuestionBank';
 import { HistoryStorage, createHistoryRecord } from '../data/HistoryStorage';
 import { AchievementStorage } from '../data/AchievementStorage';
@@ -42,8 +42,8 @@ export struct ResultPage {
     answers: [],
     questionIds: []
   }
-  @StorageLink('quizThemeIndex') @Watch('onDarkModeChange') themeIndex: number = 0;
-  @StorageLink('quizDarkMode') @Watch('onDarkModeChange') darkMode: boolean = false;
+  @StorageLink('quizThemeIndex') @Watch('onThemeChange') themeIndex: number = 0;
+  @StorageLink('quizDarkMode') @Watch('onThemeChange') darkMode: boolean = false;
   @State theme: AppTheme = THEMES[0];
   @State userAnswers: number[] = [];
   @State currentQuestions: Question[] = [];
@@ -125,8 +125,8 @@ export struct ResultPage {
 
     this.correctCount = count;
     this.answeredCount = answered;
-    // 闯关模式：分数 = 连续答对数 / 总题数 × 100（答错即结束，未答题不计入分母）
-    // 限时模式：分数 = 答对数 / 总题数 × 100（在规定时间内答了多少题）
+    // 闯关模式：分数 = 答对数 / 总题数 × 100
+    // 限时模式：分数 = 答对数 / 总题数 × 100
     // 普通模式：分数 = 答对数 / 总题数 × 100
     const totalForScore = this.currentQuestions.length;
     this.score = totalForScore > 0
@@ -184,7 +184,7 @@ export struct ResultPage {
     this.startScoreAnimation();
   }
 
-  onDarkModeChange() {
+  onThemeChange() {
     this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
   }
 
@@ -354,7 +354,7 @@ export struct ResultPage {
       .borderRadius({ bottomLeft: 28, bottomRight: 28 })
       .shadow({
         radius: 12,
-        color: 'rgba(0,0,0,0.12)',
+        color: this.theme.cardShadow,
         offsetX: 0,
         offsetY: 6
       })
@@ -530,6 +530,25 @@ export struct ResultPage {
     return -1;
   }
 
+  // 安全获取用户选项文本，避免数组越界崩溃
+  safeOptionText(q: Question, answerIndex: number): string {
+    if (answerIndex === -1 || answerIndex === undefined || answerIndex === null) {
+      return '未作答';
+    }
+    if (!q.options || answerIndex < 0 || answerIndex >= q.options.length) {
+      return '未作答';
+    }
+    return q.options[answerIndex];
+  }
+
+  // 安全获取正确答案文本，避免 correctIndex 越界崩溃
+  safeCorrectAnswer(q: Question): string {
+    if (!q.options || q.correctIndex < 0 || q.correctIndex >= q.options.length) {
+      return '无正确答案';
+    }
+    return q.options[q.correctIndex];
+  }
+
   @Builder
   WrongItem(q: Question, index: number) {
     if (index >= 0 && index < this.currentQuestions.length) {
@@ -583,7 +602,7 @@ export struct ResultPage {
             Text('你的答案：')
               .fontSize(14)
               .fontColor(this.theme.textSecondary)
-            Text(index >= 0 && this.userAnswers[index] !== -1 ? q.options[this.userAnswers[index]] : '未作答')
+            Text(this.safeOptionText(q, this.userAnswers[index]))
               .fontSize(14)
               .fontColor(this.theme.error)
               .fontWeight(FontWeight.Bold)
@@ -595,7 +614,7 @@ export struct ResultPage {
             Text('正确答案：')
               .fontSize(14)
               .fontColor(this.theme.textSecondary)
-            Text(q.options[q.correctIndex])
+            Text(this.safeCorrectAnswer(q))
               .fontSize(14)
               .fontColor(this.theme.success)
               .fontWeight(FontWeight.Bold)

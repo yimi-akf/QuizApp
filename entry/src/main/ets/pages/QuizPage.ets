@@ -1,4 +1,4 @@
-﻿import common from '@ohos.app.ability.common';
+import common from '@ohos.app.ability.common';
 import { questionBank, findQuestionById } from '../data/QuestionBank';
 import { ProgressStorage, ProgressInfo } from '../data/ProgressStorage';
 import { Difficulty, Question, QuestionType, Topic, QuizMode } from '../model/Question';
@@ -61,8 +61,8 @@ export interface QuizPageParams {
 export struct QuizPage {
   @Consume('pageStack') pageStack: NavPathStack
   @State theme: AppTheme = THEMES[0];
-  @StorageLink('quizThemeIndex') @Watch('onDarkModeChange') themeIndex: number = 0;
-  @StorageLink('quizDarkMode') @Watch('onDarkModeChange') darkMode: boolean = false;
+  @StorageLink('quizThemeIndex') @Watch('onThemeChange') themeIndex: number = 0;
+  @StorageLink('quizDarkMode') @Watch('onThemeChange') darkMode: boolean = false;
   public param: QuizPageParams = { topic: Topic.KNOWLEDGE, difficulty: Difficulty.ENTRY }
   // 当前轮次题目
   @State currentQuestions: Question[] = [];
@@ -210,7 +210,7 @@ export struct QuizPage {
     this.isLoading = false;
   }
 
-  onDarkModeChange() {
+  onThemeChange() {
     this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
   }
 
@@ -630,10 +630,10 @@ export struct QuizPage {
       return;
     }
     if (this.currentQuestion().type === QuestionType.SHORT_ANSWER) {
-      this.hasAnswered = this.viewedAnswers[this.currentIndex];
+      this.hasAnswered = this.currentIndex < this.viewedAnswers.length && this.viewedAnswers[this.currentIndex];
       if (this.hasAnswered) {
         this.answerCardOpacity = 1;
-        if (this.selfAssessments[this.currentIndex] !== 'pending') {
+        if (this.currentIndex < this.selfAssessments.length && this.selfAssessments[this.currentIndex] !== 'pending') {
           this.feedbackOpacity = 1;
           this.feedbackScale = 1;
         } else {
@@ -646,7 +646,8 @@ export struct QuizPage {
         this.feedbackScale = 0.8;
       }
     } else {
-      this.hasAnswered = this.userAnswers[this.currentIndex] !== -1;
+      const answer = this.currentIndex < this.userAnswers.length ? this.userAnswers[this.currentIndex] : -1;
+      this.hasAnswered = answer !== -1;
       this.answerCardOpacity = 0;
       this.feedbackOpacity = 0;
       this.feedbackScale = 0.8;
@@ -800,7 +801,7 @@ export struct QuizPage {
   ProgressBar() {
     Column() {
       Row() {
-        Text(`第 ${this.currentIndex + 1} / ${this.currentQuestions.length} 题`)
+        Text(this.currentQuestions.length === 0 ? '暂无题目' : `第 ${this.currentIndex + 1} / ${this.currentQuestions.length} 题`)
           .fontSize(16)
           .fontWeight(FontWeight.Bold)
           .fontColor(this.theme.textPrimary)
@@ -841,7 +842,7 @@ export struct QuizPage {
 
       Progress({
         value: this.currentIndex + (this.hasAnswered ? 1 : 0),
-        total: this.currentQuestions.length,
+        total: this.currentQuestions.length > 0 ? this.currentQuestions.length : 1,
         type: ProgressType.Linear
       })
         .width('100%')

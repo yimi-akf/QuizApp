@@ -1,11 +1,11 @@
-import { AppTheme } from '../model/AppTheme';
+import { AppTheme, THEMES } from '../model/AppTheme';
 
 @Component
 export struct EmptyState {
   @Prop icon: string = '📭';
   @Prop title: string = '暂无内容';
   @Prop subtitle: string = '这里会展示你的相关记录';
-  @Prop theme: AppTheme;
+  @Prop theme: AppTheme = THEMES[0];
 
   build() {
     Column() {

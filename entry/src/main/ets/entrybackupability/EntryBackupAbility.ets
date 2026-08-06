@@ -5,13 +5,11 @@ const DOMAIN = 0x0001;
 const TAG = 'QuizApp';
 
 export default class EntryBackupAbility extends BackupExtensionAbility {
-  async onBackup() {
+  onBackup() {
     hilog.info(DOMAIN, TAG, 'onBackup ok');
-    await Promise.resolve();
   }
 
-  async onRestore(bundleVersion: BundleVersion) {
+  onRestore(bundleVersion: BundleVersion) {
     hilog.info(DOMAIN, TAG, 'onRestore ok %{public}s', JSON.stringify(bundleVersion));
-    await Promise.resolve();
   }
 }

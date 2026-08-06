@@ -1,4 +1,4 @@
-﻿import common from '@ohos.app.ability.common';
+import common from '@ohos.app.ability.common';
 import { findQuestionById } from '../data/QuestionBank';
 import { WrongBookStorage, WrongRecord } from '../data/WrongBookStorage';
 import { Question, Topic, QuizMode } from '../model/Question';
@@ -95,7 +95,7 @@ export struct WrongBookPage {
               .height(44)
               .textAlign(TextAlign.Center)
               .borderRadius(22)
-              .backgroundColor('rgba(255,255,255,0.15)')
+              .backgroundColor(this.theme.glassBg)
               .onClick(() => this.goBack())
 
             Blank()
@@ -148,7 +148,7 @@ export struct WrongBookPage {
         .borderRadius({ bottomLeft: 28, bottomRight: 28 })
         .shadow({
           radius: 12,
-          color: 'rgba(0,0,0,0.12)',
+          color: this.theme.cardShadow,
           offsetX: 0,
           offsetY: 6
         })

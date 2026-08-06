@@ -1,4 +1,4 @@
-﻿import common from '@ohos.app.ability.common';
+import common from '@ohos.app.ability.common';
 import { ProgressStorage } from '../data/ProgressStorage';
 import { HistoryStorage } from '../data/HistoryStorage';
 import { WrongBookStorage } from '../data/WrongBookStorage';
@@ -6,6 +6,7 @@ import { AchievementStorage } from '../data/AchievementStorage';
 import { StatsStorage } from '../data/StatsStorage';
 import { FavoriteStorage } from '../data/FavoriteStorage';
 import { ThemeManager } from '../data/ThemeManager';
+import { DailyStorage } from '../data/DailyStorage';
 import { DataBackupManager } from '../data/DataBackupManager';
 import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
 
@@ -41,12 +42,14 @@ export struct DataManagePage {
     AchievementStorage.clearAll(context);
     StatsStorage.clearAll(context);
     FavoriteStorage.clearAll(context);
+    DailyStorage.clearAll(context);
     ThemeManager.clearAll(context);
     this.themeIndex = 0;
     this.darkMode = false;
     this.theme = THEMES[0];
     this.showClearDialog = false;
     this.showClearedDialog = true;
+    AppStorage.setOrCreate('dataClearedSignal', Date.now());
   }
 
   async doExport() {
@@ -210,7 +213,7 @@ export struct DataManagePage {
               .height(44)
               .textAlign(TextAlign.Center)
               .borderRadius(22)
-              .backgroundColor('rgba(255,255,255,0.15)')
+              .backgroundColor(this.theme.glassBg)
               .onClick(() => {
                 this.pageStack.pop();
               })
@@ -234,7 +237,7 @@ export struct DataManagePage {
               .fontColor(this.theme.textOnPrimary)
               .textShadow({
                 radius: 10,
-                color: 'rgba(0,0,0,0.15)',
+                color: this.theme.cardShadow,
                 offsetX: 0,
                 offsetY: 4
               })
@@ -257,7 +260,7 @@ export struct DataManagePage {
         .borderRadius({ bottomLeft: 28, bottomRight: 28 })
         .shadow({
           radius: 12,
-          color: 'rgba(0,0,0,0.12)',
+          color: this.theme.cardShadow,
           offsetX: 0,
           offsetY: 6
         })

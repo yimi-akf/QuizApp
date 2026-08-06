@@ -1,4 +1,4 @@
-﻿import dataPreferences from '@ohos.data.preferences';
+import dataPreferences from '@ohos.data.preferences';
 import common from '@ohos.app.ability.common';
 import { ConfigurationConstant } from '@kit.AbilityKit';
 import { AppTheme, DEFAULT_THEME_INDEX, THEMES, DARK_THEMES } from '../model/AppTheme';
@@ -48,6 +48,11 @@ export class ThemeManager {
       hilog.error(0x0001, 'ThemeManager', 'getCurrentTheme failed');
       return THEMES[DEFAULT_THEME_INDEX];
     }
+  }
+
+  // 根据深色模式和主题索引解析主题（消除各页面重复的三元表达式）
+  static resolveTheme(darkMode: boolean, themeIndex: number): AppTheme {
+    return darkMode ? (DARK_THEMES[themeIndex] ?? DARK_THEMES[0]) : (THEMES[themeIndex] ?? THEMES[0]);
   }
 
   // 保存当前主题索引

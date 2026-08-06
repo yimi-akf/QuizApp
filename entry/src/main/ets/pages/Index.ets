@@ -1,4 +1,4 @@
-﻿import common from '@ohos.app.ability.common';
+import common from '@ohos.app.ability.common';
 import curves from '@ohos.curves';
 import { ThemeManager } from '../data/ThemeManager';
 import { DailyStorage } from '../data/DailyStorage';
@@ -23,8 +23,8 @@ import { MineTab } from './MineTab';
 @Component
 struct Index {
   @Provide('pageStack') pageStack: NavPathStack = new NavPathStack()
-  @StorageLink('quizThemeIndex') @Watch('onThemeIndexChange') themeIndex: number = 0;
-  @StorageLink('quizDarkMode') @Watch('onThemeIndexChange') darkMode: boolean = false;
+  @StorageLink('quizThemeIndex') @Watch('onThemeChange') themeIndex: number = 0;
+  @StorageLink('quizDarkMode') @Watch('onThemeChange') darkMode: boolean = false;
   @State theme: AppTheme = THEMES[0];
   @State currentTabIndex: number = 0;
   private tabsController: TabsController = new TabsController();
@@ -39,7 +39,7 @@ struct Index {
     this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
   }
 
-  onThemeIndexChange() {
+  onThemeChange() {
     this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
   }
 
@@ -88,6 +88,13 @@ struct Index {
       }
       .hideTitleBar(true)
       .backgroundColor(this.theme.background)
+      .onBackPressed((): boolean => {
+        // 发送返回键信号给 HistoryPage，由其决定是否关闭弹窗
+        AppStorage.setOrCreate('historyPageBackPress', Date.now());
+        // 检查是否已处理（短期内是否有 handled 信号）
+        const handled = AppStorage.get<number>('historyPageBackPressHandled') ?? 0;
+        return Date.now() - handled < 500;
+      })
     } else if (name === 'WrongBook') {
       NavDestination() {
         WrongBookPage()
@@ -124,6 +131,13 @@ struct Index {
       }
       .hideTitleBar(true)
       .backgroundColor(this.theme.background)
+      .onBackPressed((): boolean => {
+        // 发送返回键信号给 DataManagePage，由其决定是否关闭弹窗
+        AppStorage.setOrCreate('dataManagePageBackPress', Date.now());
+        // 检查是否已处理（短期内是否有 handled 信号）
+        const handled = AppStorage.get<number>('dataManagePageBackPressHandled') ?? 0;
+        return Date.now() - handled < 500;
+      })
     }
   }
 
@@ -172,16 +186,16 @@ struct Index {
     }
     .width(280)
     .height(60)
-    .backgroundColor(this.darkMode ? 'rgba(30,30,30,0.75)' : 'rgba(255,255,255,0.48)')
+    .backgroundColor(this.theme.glassBg)
     .borderRadius(30)
     .backgroundBlurStyle(BlurStyle.COMPONENT_THICK, {
       colorMode: this.darkMode ? ThemeColorMode.DARK : ThemeColorMode.LIGHT,
       adaptiveColor: AdaptiveColor.DEFAULT
     })
-    .border({ width: 1.5, color: this.darkMode ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.75)' })
+    .border({ width: 1.5, color: this.theme.glassBorder })
     .shadow({
       radius: 40,
-      color: this.darkMode ? 'rgba(0,0,0,0.30)' : 'rgba(0,0,0,0.10)',
+      color: this.theme.dialogShadow,
       offsetX: 0,
       offsetY: 12
     })

@@ -1,18 +1,17 @@
-﻿import common from '@ohos.app.ability.common';
+import common from '@ohos.app.ability.common';
 import { ProgressStorage, LastProgressSummary } from '../data/ProgressStorage';
 import { ThemeManager } from '../data/ThemeManager';
 import { AppTheme, THEMES, DARK_THEMES } from '../model/AppTheme';
 import { QuizPageParams } from './QuizPage';
 import { APP_NAME, APP_SLOGAN } from '../data/AppConstants';
 import { topicLabel, difficultyLabel } from '../utils/FormatUtil';
-import { DailyStorage } from '../data/DailyStorage';
 
 // 首页标签内容
 @Component
 export struct HomeTab {
   @Consume('pageStack') pageStack: NavPathStack
-  @StorageLink('quizThemeIndex') @Watch('onThemeIndexChange') themeIndex: number = 0;
-  @StorageLink('quizDarkMode') @Watch('onThemeIndexChange') darkMode: boolean = false;
+  @StorageLink('quizThemeIndex') @Watch('onThemeChange') themeIndex: number = 0;
+  @StorageLink('quizDarkMode') @Watch('onThemeChange') darkMode: boolean = false;
   @State theme: AppTheme = THEMES[0];
   @State headerOpacity: number = 0
   @State headerOffset: number = -30
@@ -20,7 +19,6 @@ export struct HomeTab {
   @State contentOffset: number = 40
   @State lastProgress: LastProgressSummary | null = null
   @State lastHomeModule: string = ''
-  @State isDailyCompleted: boolean = false;
   @StorageLink('homeTabShowTrigger') @Watch('onHomeTabShow') homeTabShowTrigger: number = 0;
 
   aboutToAppear() {
@@ -43,7 +41,7 @@ export struct HomeTab {
     this.loadData(context);
   }
 
-  onThemeIndexChange() {
+  onThemeChange() {
     this.theme = this.darkMode ? (DARK_THEMES[this.themeIndex] ?? DARK_THEMES[0]) : (THEMES[this.themeIndex] ?? THEMES[0]);
   }
 
@@ -57,7 +55,6 @@ export struct HomeTab {
   loadData(context: common.UIAbilityContext) {
     this.lastProgress = ProgressStorage.loadLastProgress(context)
     this.lastHomeModule = ProgressStorage.loadLastHomeModule(context)
-    this.isDailyCompleted = DailyStorage.isCompletedToday(context);
   }
 
   saveLastHomeModule(module: string) {
@@ -81,7 +78,6 @@ export struct HomeTab {
   }
 
   goToDailyQuestion() {
-    const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     this.pageStack.pushPath({ name: 'DailyQuestion' });
   }
 
@@ -148,7 +144,7 @@ export struct HomeTab {
             .fontColor(this.theme.textOnPrimary)
             .textShadow({
               radius: 10,
-              color: 'rgba(0,0,0,0.15)',
+              color: this.theme.cardShadow,
               offsetX: 0,
               offsetY: 4
             })
@@ -176,7 +172,7 @@ export struct HomeTab {
       .borderRadius({ bottomLeft: 28, bottomRight: 28 })
       .shadow({
         radius: 12,
-        color: 'rgba(0,0,0,0.12)',
+        color: this.theme.cardShadow,
         offsetX: 0,
         offsetY: 6
       })

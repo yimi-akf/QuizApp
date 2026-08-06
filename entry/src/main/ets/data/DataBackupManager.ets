@@ -33,6 +33,9 @@ export interface ValidationResult {
   backup: BackupData | null;
 }
 
+// 支持的备份版本列表（用于向前兼容校验）
+const SUPPORTED_VERSIONS: number[] = [BACKUP_VERSION];
+
 // 数据备份管理器：负责导出/导入所有本地数据
 export class DataBackupManager {
   // 导出所有数据为 JSON 字符串
@@ -94,8 +97,11 @@ export class DataBackupManager {
 
       const uri: string = uris[0];
       const file: fileIo.File = fileIo.openSync(uri, fileIo.OpenMode.WRITE_ONLY | fileIo.OpenMode.CREATE);
-      fileIo.writeSync(file.fd, jsonData);
-      fileIo.closeSync(file);
+      try {
+        fileIo.writeSync(file.fd, jsonData);
+      } finally {
+        fileIo.closeSync(file);
+      }
       hilog.info(0x0001, TAG, 'Backup saved successfully');
       return true;
     } catch (e) {
@@ -121,14 +127,21 @@ export class DataBackupManager {
 
       const uri: string = uris[0];
       const file: fileIo.File = fileIo.openSync(uri, fileIo.OpenMode.READ_ONLY);
-      const stat: fileIo.Stat = fileIo.statSync(file.fd);
-      const buffer: ArrayBuffer = new ArrayBuffer(stat.size);
-      fileIo.readSync(file.fd, buffer);
-      fileIo.closeSync(file);
-
-      const decoder: util.TextDecoder = new util.TextDecoder('utf-8');
-      const content: string = decoder.decodeToString(new Uint8Array(buffer));
-      return content;
+      try {
+        const stat: fileIo.Stat = fileIo.statSync(file.fd);
+        // 空文件直接返回 null，避免 ArrayBuffer(0) 导致解码异常
+        if (stat.size <= 0) {
+          hilog.warn(0x0001, TAG, 'backup file is empty');
+          return null;
+        }
+        const buffer: ArrayBuffer = new ArrayBuffer(stat.size);
+        fileIo.readSync(file.fd, buffer);
+        const decoder: util.TextDecoder = new util.TextDecoder('utf-8');
+        const content: string = decoder.decodeToString(new Uint8Array(buffer));
+        return content;
+      } finally {
+        fileIo.closeSync(file);
+      }
     } catch (e) {
       hilog.error(0x0001, TAG, `selectBackupFile failed`);
       return null;
@@ -147,6 +160,15 @@ export class DataBackupManager {
         const result: ValidationResult = { valid: false, message: '备份文件格式不正确，缺少必要字段', backup: null };
         return result;
       }
+      // 版本号校验：仅允许已支持的版本
+      if (!SUPPORTED_VERSIONS.includes(parsed.version)) {
+        const result: ValidationResult = {
+          valid: false,
+          message: `备份文件版本(v${parsed.version})不被支持，当前支持版本: v${BACKUP_VERSION}`,
+          backup: null
+        };
+        return result;
+      }
       if (Object.keys(parsed.stores).length === 0) {
         const result: ValidationResult = { valid: false, message: '备份文件内容为空', backup: null };
         return result;
@@ -162,6 +184,19 @@ export class DataBackupManager {
   // 导入备份数据到所有 preferences
   static importAllData(context: common.UIAbilityContext, backup: BackupData): boolean {
     try {
+      // 导入前先清理所有受管 preferences 的旧数据，避免旧 key 残留导致数据"合并"而非"覆盖"
+      const allStoreNames: string[] = Object.keys(BACKUP_STORES);
+      for (let i = 0; i < allStoreNames.length; i++) {
+        const storeName: string = allStoreNames[i];
+        try {
+          const prefs: dataPreferences.Preferences = dataPreferences.getPreferencesSync(context, { name: storeName });
+          prefs.clearSync();
+          prefs.flushSync();
+        } catch (e) {
+          hilog.warn(0x0001, TAG, `Failed to clear store before import: ${storeName}`);
+        }
+      }
+
       const storeNames: string[] = Object.keys(backup.stores);
       for (let i = 0; i < storeNames.length; i++) {
         const storeName: string = storeNames[i];
@@ -172,8 +207,8 @@ export class DataBackupManager {
           for (let j = 0; j < keys.length; j++) {
             const key: string = keys[j];
             const value: string = storeData[key];
-            // theme_index 存为数字，其余按字符串处理
-            if (key === 'theme_index') {
+            // theme_index 和 daily_question_id 存为数字，其余按字符串处理
+            if (key === 'theme_index' || key === 'daily_question_id') {
               prefs.putSync(key, Number(value));
             } else {
               prefs.putSync(key, value);

@@ -1,4 +1,4 @@
-﻿// 格式化与标签工具函数
+// 格式化与标签工具函数
 
 import { Difficulty, Topic, QuestionType } from '../model/Question';
 import { AppTheme } from '../model/AppTheme';
@@ -41,22 +41,13 @@ export function difficultyColor(theme: AppTheme, difficulty: Difficulty | 'mixed
   }
 }
 
-export function difficultyTagBgColor(difficulty: Difficulty | 'mixed', darkMode: boolean = false): string {
-  if (darkMode) {
-    switch (difficulty) {
-      case Difficulty.ENTRY: return '#1B3D1B';
-      case Difficulty.ADVANCED: return '#3D2A1B';
-      case Difficulty.CHALLENGE: return '#3D1B1B';
-      case 'mixed': return '#2A1A3A';
-      default: return '#1A1A1A';
-    }
-  }
+export function difficultyTagBgColor(difficulty: Difficulty | 'mixed', theme: AppTheme): string {
   switch (difficulty) {
-    case Difficulty.ENTRY: return '#E8F5E9';
-    case Difficulty.ADVANCED: return '#FFF3E0';
-    case Difficulty.CHALLENGE: return '#FFEBEE';
-    case 'mixed': return '#F3E5F5';
-    default: return '#F5F5F5';
+    case Difficulty.ENTRY: return theme.optionCorrectBg;
+    case Difficulty.ADVANCED: return theme.feedbackWrongBg;
+    case Difficulty.CHALLENGE: return theme.optionWrongBg;
+    case 'mixed': return theme.answerBg;
+    default: return theme.divider;
   }
 }
 
@@ -70,9 +61,12 @@ export function typeLabel(type: QuestionType): string {
 }
 
 export function formatTime(seconds: number): string {
-  const total = seconds;
-  const minutes = Math.floor(total / 60);
-  const secs = total % 60;
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    seconds = 0;
+  }
+  seconds = Math.floor(seconds);
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
   const pad = (n: number): string => (n < 10 ? '0' + n : String(n));
   return `${pad(minutes)}:${pad(secs)}`;
 }
